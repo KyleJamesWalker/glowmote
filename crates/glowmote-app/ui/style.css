@@ -309,3 +309,7 @@ input.text {
 .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 8px 0 0; font-size: 14px; }
 .facts dt { color: var(--muted); }
 .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+.leave { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.leave p { margin: 0; font-size: 14px; }
+.leave .row { justify-content: flex-start; flex-wrap: wrap; }

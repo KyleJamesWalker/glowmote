@@ -64,6 +64,14 @@
           </div>
           <label class="switch"><input id="diy-mode" type="checkbox"><span></span><span class="sr">DIY mode</span></label>
         </div>
+        <div id="diy-leave" class="leave" hidden>
+          <p>Leave DIY mode?</p>
+          <div class="row">
+            <button id="diy-keep" type="button">Keep drawing</button>
+            <button id="diy-restore" type="button">Restore previous</button>
+            <button id="diy-stay" class="ghost" type="button">Cancel</button>
+          </div>
+        </div>
         <div id="diy-tools" class="stack" inert>
           <div class="slider">
             <label for="diy-brightness">Brightness <output id="diy-brightness-value">50%</output></label>

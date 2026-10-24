@@ -94,6 +94,7 @@ function showDisconnected(text = "Not connected") {
   $("disconnect").hidden = true;
   $("diy-mode").checked = false;
   $("diy-tools").inert = true;
+  $("diy-leave").hidden = true;
   $("info-model").textContent = "–";
   $("info-firmware").textContent = "–";
   $("link").title = "";
@@ -491,11 +492,27 @@ $("strip").addEventListener("pointerover", (e) => {
 });
 window.addEventListener("pointerup", () => { painting = false; });
 
+// Leaving DIY asks first: DSTOP 01 keeps the drawing showing, DSTOP 00 restores the previous mode.
 $("diy-mode").addEventListener("change", async () => {
-  const on = $("diy-mode").checked;
-  await queueDiy("diy", { on });
-  $("diy-tools").inert = !on;
+  if ($("diy-mode").checked) {
+    await queueDiy("diy", { on: true });
+    $("diy-tools").inert = false;
+    return;
+  }
+  $("diy-mode").checked = true;
+  $("diy-leave").hidden = false;
 });
+
+async function leaveDiy(keep) {
+  $("diy-leave").hidden = true;
+  $("diy-mode").checked = false;
+  $("diy-tools").inert = true;
+  await queueDiy("diy", { on: false, keep });
+}
+
+$("diy-keep").addEventListener("click", () => leaveDiy(true));
+$("diy-restore").addEventListener("click", () => leaveDiy(false));
+$("diy-stay").addEventListener("click", () => { $("diy-leave").hidden = true; });
 $("diy-brightness").addEventListener("input", () => {
   $("diy-brightness-value").textContent = `${$("diy-brightness").value}%`;
 });
