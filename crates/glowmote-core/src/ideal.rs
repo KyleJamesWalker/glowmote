@@ -232,6 +232,219 @@ fn dood(target: u8, index: u16, Rgb { r, g, b }: Rgb, brightness_pct: u8) -> Pac
     p
 }
 
+/// DIY pixel animation, as stored per LED by the firmware.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DiyMode {
+    Flash = 0,
+    Breathe = 1,
+    Static = 2,
+}
+
+/// `count` consecutive LEDs with the same color, mode and speed (1–100, 100 fastest).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DiyRun {
+    pub count: u16,
+    pub color: Rgb,
+    pub mode: DiyMode,
+    pub speed: u8,
+}
+
+/// Collapses a per-LED color list into the fewest runs.
+pub fn diy_runs(pixels: &[Rgb], mode: DiyMode, speed: u8) -> Vec<DiyRun> {
+    let mut runs: Vec<DiyRun> = Vec::new();
+    for &color in pixels {
+        match runs.last_mut() {
+            Some(run) if run.color == color && run.count < u16::MAX => run.count += 1,
+            _ => runs.push(DiyRun {
+                count: 1,
+                color,
+                mode,
+                speed,
+            }),
+        }
+    }
+    runs
+}
+
+pub const DIY_FRAME_LEN: usize = 100;
+const DIY_RECORD_LEN: usize = 7;
+const DIY_RECORDS_PER_FRAME: usize = 14;
+
+/// A bulk DIY drawing: send `header` and wait for `DOOTOK`, write each frame unencrypted to
+/// [`BULK_WRITE_CHAR_UUID`] and wait for its `DOOTREOK` (see [`parse_frame_ack`]), then send
+/// [`diy_upload_done`] (acked with `DOOTCPOK`) and [`diy_upload_finish`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiyUpload {
+    pub header: Packet,
+    pub frames: Vec<[u8; DIY_FRAME_LEN]>,
+}
+
+/// Builds a bulk DIY upload (`DOOT`). The firmware writes the runs back to back from LED 0 with
+/// no bounds check, so their total must fit `led_count`, itself at most [`MAX_LEDS`].
+pub fn diy_upload(runs: &[DiyRun], led_count: u16) -> Result<DiyUpload, OutOfRange> {
+    check("LED count", led_count, 1, MAX_LEDS)?;
+    let mut total: u16 = 0;
+    for run in runs {
+        check("run length", run.count, 1, led_count)?;
+        check("DIY speed", run.speed, 1, 100)?;
+        total = total.saturating_add(run.count);
+    }
+    check("LEDs drawn", total, 1, led_count)?;
+
+    let frames: Vec<_> = runs
+        .chunks(DIY_RECORDS_PER_FRAME)
+        .enumerate()
+        .map(|(i, chunk)| {
+            let mut frame = [0u8; DIY_FRAME_LEN];
+            frame[0] = (chunk.len() * DIY_RECORD_LEN + 1) as u8; // data length + 1
+            frame[1] = i as u8;
+            for (j, run) in chunk.iter().enumerate() {
+                let [hi, lo] = run.count.to_be_bytes();
+                let Rgb { r, g, b } = run.color;
+                let at = 2 + j * DIY_RECORD_LEN;
+                frame[at..at + DIY_RECORD_LEN].copy_from_slice(&[
+                    hi,
+                    lo,
+                    r,
+                    g,
+                    b,
+                    run.mode as u8,
+                    run.speed,
+                ]);
+            }
+            frame
+        })
+        .collect();
+    let mut header = tagged(b"DOOT", &[frames.len() as u8]);
+    header[0] = 4; // the length byte excludes the frame count
+    Ok(DiyUpload { header, frames })
+}
+
+/// Closes a [`diy_upload`] (`DOOTCP`). The firmware keeps the drawing only if the last frame
+/// index it received matches the header's frame count.
+pub fn diy_upload_done() -> Packet {
+    tagged(b"DOOTCP", &[])
+}
+
+/// Sent after `DOOTCPOK`: `show` keeps the uploaded drawing, otherwise the lights return to their
+/// previous mode. Not acknowledged.
+pub fn diy_upload_finish(show: bool) -> Packet {
+    tagged(b"DTARTCY", &[show as u8])
+}
+
+/// Parses a per-frame acknowledgement such as `DOOTREOK`, which carries the frame index after
+/// `OK`: returns the tag (`DOOTRE`) and the index.
+pub fn parse_frame_ack(plain: &Packet) -> Option<(&str, u8)> {
+    let len = plain[0] as usize;
+    let index = *plain.get(len)?;
+    let text = std::str::from_utf8(plain.get(1..len)?).ok()?;
+    let tag = text.strip_suffix("OK").filter(|t| t.ends_with("RE"))?;
+    Some((tag, index))
+}
+
+// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
+#[cfg(test)]
+mod predicted_diy_upload {
+    use super::*;
+    use hex_literal::hex;
+
+    const RED: Rgb = Rgb::new(0xff, 0, 0);
+    const GREEN: Rgb = Rgb::new(0, 0xff, 0);
+    const BLUE: Rgb = Rgb::new(0, 0, 0xff);
+
+    fn runs(n: usize) -> Vec<DiyRun> {
+        let colors = [RED, GREEN];
+        let pixels: Vec<_> = (0..n).map(|i| colors[i % 2]).collect();
+        diy_runs(&pixels, DiyMode::Static, 100)
+    }
+
+    #[test]
+    fn diy_upload_commands_match_prediction() {
+        assert_eq!(
+            encrypt(&diy_upload(&runs(14), 180).unwrap().header),
+            hex!("d76dc77f84fdfb9bb32b2ea2b51dbbdd")
+        );
+        assert_eq!(
+            encrypt(&diy_upload(&runs(15), 180).unwrap().header),
+            hex!("7c9ce439908ee0714226ea4e5f89469b")
+        );
+        assert_eq!(
+            encrypt(&diy_upload_done()),
+            hex!("49ca6210248aac8b1c1fc7fc55dd3f94")
+        );
+        assert_eq!(
+            encrypt(&diy_upload_finish(false)),
+            hex!("bbaea25c50e3b79766a00d8d7f5a4a56")
+        );
+        assert_eq!(
+            encrypt(&diy_upload_finish(true)),
+            hex!("e761c13e901167bd39bf66db76b9eb6f")
+        );
+    }
+
+    #[test]
+    fn diy_frames_hold_14_records() {
+        let upload = diy_upload(&runs(15), 180).unwrap();
+        assert_eq!(upload.frames.len(), 2);
+        let [first, last] = [&upload.frames[0], &upload.frames[1]];
+        assert_eq!(&first[..16], &hex!("6300 0001ff0000 0264 0001 00ff00 0264"));
+        assert_eq!(&first[93..], &hex!("000100ff000264"));
+        assert_eq!(&last[..9], &hex!("0801 0001ff0000 0264"));
+        assert!(last[9..].iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn diy_runs_merge_neighbors() {
+        let pixels = [RED, RED, RED, BLUE, RED, RED];
+        let runs = diy_runs(&pixels, DiyMode::Breathe, 40);
+        let counts: Vec<_> = runs.iter().map(|r| (r.count, r.color)).collect();
+        assert_eq!(counts, [(3, RED), (1, BLUE), (2, RED)]);
+        assert!(
+            runs.iter()
+                .all(|r| r.mode == DiyMode::Breathe && r.speed == 40)
+        );
+        let frame = diy_upload(&runs, 180).unwrap().frames[0];
+        assert_eq!(&frame[..9], &hex!("1600 0003ff0000 0128"));
+        assert!(diy_runs(&[], DiyMode::Static, 100).is_empty());
+    }
+
+    #[test]
+    fn diy_upload_keeps_runs_inside_the_strip() {
+        let all = diy_runs(&[RED; 180], DiyMode::Static, 100);
+        assert!(diy_upload(&all, 180).is_ok());
+        assert_eq!(diy_upload(&all, 179).unwrap_err().field, "run length");
+        let split = [all[0], all[0]];
+        assert_eq!(diy_upload(&split, 300).unwrap_err().field, "LEDs drawn");
+        let full = diy_runs(&[RED; MAX_LEDS as usize], DiyMode::Static, 100);
+        assert!(diy_upload(&full, MAX_LEDS).is_ok());
+        assert!(diy_upload(&full, MAX_LEDS + 1).is_err());
+        assert!(diy_upload(&[], 180).is_err());
+        assert!(diy_upload(&runs(400), MAX_LEDS).is_ok());
+        let zero = DiyRun { count: 0, ..all[0] };
+        assert!(diy_upload(&[zero, all[0]], 180).is_err());
+    }
+
+    #[test]
+    fn diy_upload_rejects_speeds_outside_1_to_100() {
+        for (speed, ok) in [(0, false), (1, true), (100, true), (101, false)] {
+            let runs = diy_runs(&[RED; 10], DiyMode::Flash, speed);
+            assert_eq!(diy_upload(&runs, 180).is_ok(), ok, "{speed}");
+        }
+    }
+
+    #[test]
+    fn parses_diy_frame_acks() {
+        let reok = decrypt(&hex!("3f6220826483b8ca6e5cc87e657c7ef2"));
+        assert_eq!(parse_frame_ack(&reok), Some(("DOOTRE", 0)));
+        assert_eq!(parse_ack(&reok), None);
+        let cp = decrypt(&hex!("3af00d94d213c084bc9df70a59db4b4e"));
+        assert_eq!(parse_ack(&cp), Some("DOOTCP"));
+        assert_eq!(parse_frame_ack(&cp), None);
+        let ok = decrypt(&hex!("886b02308c82c98f6d267a5d917c6685"));
+        assert_eq!(parse_ack(&ok), Some("DOOT"));
+    }
+}
+
 /// Every scene captured used this effect byte.
 const SCENE_EFFECT: u8 = 0x07;
 const SCENE_FRAME_LEN: usize = 98;

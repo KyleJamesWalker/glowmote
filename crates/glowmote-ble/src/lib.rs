@@ -92,6 +92,34 @@ impl Light {
         Ok(self.wait_ack("MULTCP").await.is_some())
     }
 
+    /// Sends a bulk DIY drawing frame by frame, then shows it. Returns `false` if the light
+    /// stopped acknowledging; the upload is then closed and discarded.
+    pub async fn send_diy_upload(&mut self, upload: &ideal::DiyUpload) -> Result<bool> {
+        if self.send(&upload.header).await?.is_none() {
+            return Ok(false);
+        }
+        let mut complete = true;
+        for (i, frame) in upload.frames.iter().enumerate() {
+            self.link.write_bulk(frame).await?;
+            let acked = self
+                .wait_for(|plain| {
+                    ideal::parse_frame_ack(plain)
+                        .filter(|&(tag, index)| tag == "DOOTRE" && usize::from(index) == i)
+                        .map(|(_, index)| index)
+                })
+                .await;
+            if acked.is_none() {
+                complete = false;
+                break;
+            }
+        }
+        // DOOTCP also resets the firmware's write offset, so send it even after a failed frame
+        let closed = self.send(&ideal::diy_upload_done()).await?.is_some();
+        let shown = complete && closed;
+        self.send_unacked(&ideal::diy_upload_finish(shown)).await?;
+        Ok(shown)
+    }
+
     /// The model string, e.g. `TR2411R003-07`, from the write characteristic's user description.
     /// `None` where the platform cannot read GATT descriptors (Android, via blec).
     pub async fn read_model(&mut self) -> Result<Option<String>> {
