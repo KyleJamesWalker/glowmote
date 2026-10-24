@@ -1,18 +1,25 @@
 //! BLE transport for iDeal lights: scanning, and a connection that stays open across commands.
+//!
+//! btleplug drives the radio everywhere except Android, where blec does.
 
 use std::pin::Pin;
 use std::time::Duration;
 
-use anyhow::{Context, Result, bail};
-use btleplug::api::{
-    Central, Characteristic, Manager as _, Peripheral as _, ScanFilter, ValueNotification,
-    WriteType,
-};
-use btleplug::platform::{Manager, Peripheral};
+use anyhow::{Result, bail};
 use futures::{Stream, StreamExt};
 use glowmote_core::ideal;
 use tokio::time::Instant;
-use uuid::Uuid;
+
+#[cfg(target_os = "android")]
+#[path = "blec.rs"]
+mod backend;
+#[cfg(not(target_os = "android"))]
+#[path = "btleplug.rs"]
+mod backend;
+
+#[cfg(not(target_os = "android"))]
+pub use backend::characteristic;
+pub use backend::{Peripheral, scan};
 
 const ACK_TIMEOUT: Duration = Duration::from_secs(2);
 /// The vendor app never sends commands closer together than this.
@@ -22,30 +29,6 @@ const MIN_SEND_INTERVAL: Duration = Duration::from_millis(50);
 pub struct Found {
     pub name: String,
     pub peripheral: Peripheral,
-}
-
-pub async fn scan(duration: Duration) -> Result<Vec<Found>> {
-    let manager = Manager::new().await?;
-    let adapter = manager
-        .adapters()
-        .await?
-        .into_iter()
-        .next()
-        .context("no Bluetooth adapter")?;
-    adapter.start_scan(ScanFilter::default()).await?;
-    tokio::time::sleep(duration).await;
-    adapter.stop_scan().await?;
-
-    let mut found = Vec::new();
-    for peripheral in adapter.peripherals().await? {
-        if let Some(name) = peripheral.properties().await?.and_then(|p| p.local_name)
-            && ideal::is_ideal_name(&name)
-        {
-            found.push(Found { name, peripheral });
-        }
-    }
-    found.sort_by(|a, b| a.name.cmp(&b.name));
-    Ok(found)
 }
 
 /// Picks the one light whose name starts with `wanted`, or the only light if `wanted` is `None`.
@@ -67,22 +50,14 @@ pub fn pick(found: Vec<Found>, wanted: Option<&str>) -> Result<Found> {
     }
 }
 
-pub fn characteristic(peripheral: &Peripheral, uuid: &str) -> Result<Characteristic> {
-    let uuid = Uuid::parse_str(uuid).expect("valid UUID constant");
-    peripheral
-        .characteristics()
-        .into_iter()
-        .find(|c| c.uuid == uuid)
-        .with_context(|| format!("characteristic {uuid} not found"))
-}
-
-type Notifications = Pin<Box<dyn Stream<Item = ValueNotification> + Send>>;
+/// Values notified on the light's notify characteristic.
+type Notifications = Pin<Box<dyn Stream<Item = Vec<u8>> + Send>>;
 
 /// An open connection. The lights blink 3 times each time one is opened.
 pub struct Light {
     pub name: String,
     peripheral: Peripheral,
-    write: Characteristic,
+    link: backend::Link,
     notifications: Notifications,
     last_write: Option<Instant>,
 }
@@ -90,18 +65,18 @@ pub struct Light {
 impl Light {
     pub async fn connect(found: Found) -> Result<Self> {
         let Found { name, peripheral } = found;
-        let (write, notifications) = open(&peripheral).await?;
+        let (link, notifications) = backend::Link::open(&peripheral).await?;
         Ok(Self {
             name,
             peripheral,
-            write,
+            link,
             notifications,
             last_write: None,
         })
     }
 
     /// Sends a plaintext packet and returns the acknowledged tag, or `None` if no matching
-    /// acknowledgement arrived. Reconnects first if the light dropped the connection.
+    /// acknowledgement arrived. Reconnects first if the connection is down.
     pub async fn send(&mut self, plain: &ideal::Packet) -> Result<Option<String>> {
         self.send_unacked(plain).await?;
         Ok(self.wait_ack(command_tag(plain)).await)
@@ -113,26 +88,13 @@ impl Light {
         if self.send(header).await?.is_none() {
             return Ok(false);
         }
-        let bulk = characteristic(&self.peripheral, ideal::BULK_WRITE_CHAR_UUID)?;
-        self.peripheral
-            .write(&bulk, frame, WriteType::WithoutResponse)
-            .await?;
+        self.link.write_bulk(frame).await?;
         Ok(self.wait_ack("MULTCP").await.is_some())
     }
 
     /// The model string, e.g. `TR2411R003-07`, from the write characteristic's user description.
     pub async fn read_model(&mut self) -> Result<String> {
-        let description = Uuid::from_u128(0x0000_2901_0000_1000_8000_0080_5f9b_34fb);
-        let descriptor = self
-            .write
-            .descriptors
-            .iter()
-            .find(|d| d.uuid == description)
-            .context("no user description on the write characteristic")?;
-        let raw = self.peripheral.read_descriptor(descriptor).await?;
-        Ok(String::from_utf8_lossy(&raw)
-            .trim_end_matches('\0')
-            .to_owned())
+        self.link.read_model().await
     }
 
     /// The two `VE` version strings, `None` for any the light did not answer.
@@ -161,8 +123,8 @@ impl Light {
         mut matches: impl FnMut(&ideal::Packet) -> Option<T>,
     ) -> Option<T> {
         let found = tokio::time::timeout(ACK_TIMEOUT, async {
-            while let Some(n) = self.notifications.next().await {
-                if let Ok(block) = <ideal::Packet>::try_from(n.value.as_slice())
+            while let Some(value) = self.notifications.next().await {
+                if let Ok(block) = <ideal::Packet>::try_from(value.as_slice())
                     && let Some(value) = matches(&ideal::decrypt(&block))
                 {
                     return Some(value);
@@ -176,35 +138,19 @@ impl Light {
 
     /// Sends a packet the light never acknowledges, such as `DEN` or `DSTOP`.
     pub async fn send_unacked(&mut self, plain: &ideal::Packet) -> Result<()> {
-        if !self.peripheral.is_connected().await? {
-            (self.write, self.notifications) = open(&self.peripheral).await?;
+        if !self.link.is_connected().await? {
+            (self.link, self.notifications) = backend::Link::open(&self.peripheral).await?;
         }
         if let Some(last) = self.last_write {
             tokio::time::sleep_until(last + MIN_SEND_INTERVAL).await;
         }
         self.last_write = Some(Instant::now());
-        self.peripheral
-            .write(
-                &self.write,
-                &ideal::encrypt(plain),
-                WriteType::WithoutResponse,
-            )
-            .await?;
-        Ok(())
+        self.link.write(&ideal::encrypt(plain)).await
     }
 
     pub async fn disconnect(self) -> Result<()> {
-        Ok(self.peripheral.disconnect().await?)
+        self.link.disconnect().await
     }
-}
-
-async fn open(peripheral: &Peripheral) -> Result<(Characteristic, Notifications)> {
-    peripheral.connect().await?;
-    peripheral.discover_services().await?;
-    let write = characteristic(peripheral, ideal::WRITE_CHAR_UUID)?;
-    let notify = characteristic(peripheral, ideal::NOTIFY_CHAR_UUID)?;
-    peripheral.subscribe(&notify).await?;
-    Ok((write, peripheral.notifications().await?))
 }
 
 fn command_tag(plain: &ideal::Packet) -> &str {

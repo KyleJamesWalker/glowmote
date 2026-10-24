@@ -6,11 +6,17 @@ license.workspace = true
 
 [dependencies]
 anyhow = "1.0.104"
-btleplug = "0.13.5"
 futures = "0.3.34"
 glowmote-core = { path = "../glowmote-core" }
 tokio = { version = "1.54.1", features = ["time"] }
 uuid = "1.29.0"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+btleplug = "0.13.5"
+
+[target.'cfg(target_os = "android")'.dependencies]
+blec = "0.18.0"
+tokio = { version = "1.54.1", features = ["sync", "time"] }
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "time"] }
