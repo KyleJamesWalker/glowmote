@@ -265,15 +265,24 @@ $("scene-play").addEventListener("click", playScene);
 
 // Every pixel write must reach the light, so DIY commands run strictly in order.
 let diyQueue = Promise.resolve();
+let diyPending = 0;
+function showProgress() {
+  $("diy-progress").textContent = diyPending > 1 ? `Sending… ${diyPending} left` : "";
+}
 const queueDiy = (command, args) => {
-  diyQueue = diyQueue.then(() => run(command, args));
+  diyPending++;
+  showProgress();
+  diyQueue = diyQueue.then(() => run(command, args)).finally(() => {
+    diyPending--;
+    showProgress();
+  });
   return diyQueue;
 };
-const diyArgs = () => ({
-  rgb: balance($("color").value),
-  brightness: Number($("diy-brightness").value),
-  leds: Number($("leds").value),
-});
+const diyBrightness = () => Number($("diy-brightness").value);
+const ledCount = () => Math.max(1, Math.min(1024, Number($("leds").value) || 180));
+const splitAt = () => Math.min(ledCount() - 1, Math.max(0, Number($("split").value)));
+
+let hiddenArms = [];
 
 function loadLayout() {
   try {
@@ -281,14 +290,31 @@ function loadLayout() {
     if (saved) {
       $("leds").value = saved.leds;
       $("split").value = saved.split;
+      hiddenArms = saved.hidden ?? [];
     }
   } catch {}
 }
 
 function saveLayout() {
   try {
-    localStorage.setItem("layout", JSON.stringify({ leds: $("leds").value, split: $("split").value }));
+    localStorage.setItem("layout", JSON.stringify({ leds: $("leds").value, split: $("split").value, hidden: hiddenArms }));
   } catch {}
+}
+
+// Indexes of each arm, ordered outward from the controller.
+function arms() {
+  const leds = ledCount();
+  const split = splitAt();
+  return [
+    ["Side A", Array.from({ length: split + 1 }, (_, i) => split - i)],
+    ["Side B", Array.from({ length: leds - split - 1 }, (_, i) => split + 1 + i)],
+  ].filter(([, indexes]) => indexes.length);
+}
+
+function mirrorOf(index) {
+  const split = splitAt();
+  const other = index <= split ? split + 1 + (split - index) : split - (index - split - 1);
+  return other >= 0 && other < ledCount() ? other : null;
 }
 
 function ledCell(index) {
@@ -300,13 +326,27 @@ function ledCell(index) {
   return cell;
 }
 
-function arm(label, indexes) {
+function armView(label, indexes) {
   const section = document.createElement("div");
   section.className = "arm";
+  section.classList.toggle("collapsed", hiddenArms.includes(label));
   const head = document.createElement("div");
   head.className = "arm-head";
-  head.innerHTML = `<span class="ctrl">Controller</span><span></span>`;
-  head.lastChild.textContent = `${label} · ${indexes[0]} → ${indexes.at(-1)}`;
+  const ctrl = document.createElement("span");
+  ctrl.className = "ctrl";
+  ctrl.textContent = "Controller";
+  const text = document.createElement("span");
+  text.className = "arm-label";
+  text.textContent = `${label} · ${indexes[0]} → ${indexes.at(-1)}`;
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.textContent = section.classList.contains("collapsed") ? "Show" : "Hide";
+  toggle.addEventListener("click", () => {
+    hiddenArms = hiddenArms.includes(label) ? hiddenArms.filter((l) => l !== label) : [...hiddenArms, label];
+    saveLayout();
+    buildStrip();
+  });
+  head.append(ctrl, text, toggle);
   const dots = document.createElement("div");
   dots.className = "dots";
   dots.replaceChildren(...indexes.map(ledCell));
@@ -314,25 +354,58 @@ function arm(label, indexes) {
   return section;
 }
 
-// Each arm is drawn starting from the LED next to the controller.
+let design = new Map();
+
 function buildStrip() {
-  const leds = Math.max(1, Math.min(1024, Number($("leds").value) || 180));
-  const split = Math.min(leds - 1, Math.max(0, Number($("split").value)));
-  const sideA = Array.from({ length: split + 1 }, (_, i) => split - i);
-  const sideB = Array.from({ length: leds - split - 1 }, (_, i) => split + 1 + i);
-  $("strip").replaceChildren(arm("Side A", sideA), ...(sideB.length ? [arm("Side B", sideB)] : []));
+  $("strip").replaceChildren(...arms().map(([label, indexes]) => armView(label, indexes)));
+  for (const [index, { color }] of design) showPixel(index, color);
 }
 
-const stripCells = () => $("strip").querySelectorAll("[data-index]");
+const cellAt = (index) => $("strip").querySelector(`[data-index="${index}"]`);
+
+function showPixel(index, color) {
+  const cell = cellAt(index);
+  if (!cell) return;
+  cell.style.setProperty("--cell", color);
+  cell.dataset.painted = "";
+}
+
+function setPixel(index, color, brightness = diyBrightness()) {
+  const current = design.get(index);
+  if (current && current.color === color && current.brightness === brightness) return;
+  design.set(index, { color, brightness });
+  showPixel(index, color);
+  queueDiy("diy_pixel", { index, leds: ledCount(), rgb: balance(color), brightness });
+}
+
+function fillAll(color, brightness = diyBrightness()) {
+  design = new Map(Array.from({ length: ledCount() }, (_, i) => [i, { color, brightness }]));
+  for (const [index] of design) showPixel(index, color);
+  queueDiy("diy_fill", { leds: ledCount(), rgb: balance(color), brightness });
+}
 
 function paint(cell) {
-  const args = diyArgs();
-  const shown = $("color").value;
-  const key = `${shown}/${args.brightness}`;
-  if (cell.dataset.painted === key) return;
-  cell.dataset.painted = key;
-  cell.style.setProperty("--cell", shown);
-  queueDiy("diy_pixel", { index: Number(cell.dataset.index), ...args });
+  const index = Number(cell.dataset.index);
+  const color = $("color").value;
+  setPixel(index, color);
+  const mirror = $("mirror").checked ? mirrorOf(index) : null;
+  if (mirror !== null) setPixel(mirror, color);
+}
+
+function mix(a, b, t) {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = (shift) => Math.round(((pa >> shift) & 0xff) * (1 - t) + ((pb >> shift) & 0xff) * t);
+  return `#${[16, 8, 0].map((s) => ch(s).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function applyGradient() {
+  const from = $("color").value;
+  const to = $("gradient-to").value;
+  for (const [label, indexes] of arms()) {
+    if (hiddenArms.includes(label)) continue;
+    indexes.forEach((index, i) => setPixel(index, mix(from, to, indexes.length > 1 ? i / (indexes.length - 1) : 0)));
+  }
 }
 
 let painting = false;
@@ -357,14 +430,81 @@ $("diy-brightness").addEventListener("input", () => {
 for (const id of ["leds", "split"]) {
   $(id).addEventListener("change", () => { saveLayout(); buildStrip(); });
 }
-$("fill").addEventListener("click", () => {
-  const args = diyArgs();
-  const shown = $("color").value;
-  for (const cell of stripCells()) {
-    cell.style.setProperty("--cell", shown);
-    cell.dataset.painted = `${shown}/${args.brightness}`;
+$("fill").addEventListener("click", () => fillAll($("color").value));
+$("gradient").addEventListener("click", applyGradient);
+
+// Saved designs
+
+function loadDesigns() {
+  try {
+    return JSON.parse(localStorage.getItem("designs") ?? "{}");
+  } catch {
+    return {};
   }
-  queueDiy("diy_fill", args);
+}
+
+function storeDesigns(designs) {
+  try {
+    localStorage.setItem("designs", JSON.stringify(designs));
+  } catch {}
+}
+
+// Replays a design as one fill with its most common color, then pixels for the rest.
+function applyDesign(pixels) {
+  const counts = new Map();
+  for (const [, p] of pixels) {
+    const key = `${p.color}/${p.brightness}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const [base] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? [];
+  if (base) {
+    const [color, brightness] = base.split("/");
+    fillAll(color, Number(brightness));
+  }
+  for (const [index, p] of pixels) setPixel(index, p.color, p.brightness);
+}
+
+function showDesigns() {
+  const designs = loadDesigns();
+  $("designs").replaceChildren(...Object.entries(designs).map(([name, pixels]) => {
+    const li = document.createElement("li");
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.className = "design-apply";
+    const swatches = document.createElement("span");
+    swatches.className = "swatches";
+    for (const color of [...new Set(pixels.map(([, p]) => p.color))].slice(0, 5)) {
+      const dot = document.createElement("span");
+      dot.style.setProperty("background", color);
+      swatches.append(dot);
+    }
+    apply.append(swatches, name);
+    apply.addEventListener("click", () => applyDesign(pixels));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "design-delete";
+    remove.textContent = "✕";
+    remove.setAttribute("aria-label", `Delete ${name}`);
+    remove.addEventListener("click", () => {
+      const all = loadDesigns();
+      delete all[name];
+      storeDesigns(all);
+      showDesigns();
+    });
+    li.append(apply, remove);
+    return li;
+  }));
+}
+
+$("design-save").addEventListener("click", () => {
+  const name = $("design-name").value.trim();
+  if (!name || design.size === 0) {
+    setStatus(design.size ? "Name the design first." : "Paint something first.", true);
+    return;
+  }
+  storeDesigns({ ...loadDesigns(), [name]: [...design] });
+  $("design-name").value = "";
+  showDesigns();
 });
 
 for (const key of WB_KEYS) {
@@ -393,3 +533,4 @@ showWb();
 pickColor($("color").value, false);
 loadLayout();
 buildStrip();
+showDesigns();

@@ -66,12 +66,33 @@
             <label for="diy-brightness">Brightness <output id="diy-brightness-value">50%</output></label>
             <input id="diy-brightness" type="range" min="0" max="100" value="50">
           </div>
-          <div class="row layout">
-            <label for="leds" class="inline">LEDs <input id="leds" type="number" min="1" max="1024" value="180"></label>
-            <label for="split" class="inline">Controller at LED <input id="split" type="number" min="0" max="1023" value="89"></label>
+          <div class="row">
+            <button id="fill" class="primary" type="button">Fill strip</button>
+            <label class="inline toggle-row">Mirror sides <span class="switch"><input id="mirror" type="checkbox"><span></span></span></label>
           </div>
-          <button id="fill" class="primary" type="button">Fill strip</button>
+          <div class="row">
+            <label class="inline">Gradient to <input id="gradient-to" class="mini-color" type="color" value="#30b0ff"></label>
+            <button id="gradient" type="button">Apply gradient</button>
+          </div>
+          <p id="diy-progress" class="hint" aria-live="polite"></p>
           <div id="strip" aria-label="LED strip"></div>
+          <details class="more">
+            <summary>Strip layout</summary>
+            <div class="row layout">
+              <label for="leds" class="inline">LEDs <input id="leds" type="number" min="1" max="1024" value="180"></label>
+              <label for="split" class="inline">Controller at LED <input id="split" type="number" min="0" max="1023" value="89"></label>
+            </div>
+          </details>
+          <details class="more">
+            <summary>Saved designs</summary>
+            <div class="stack">
+              <div class="row">
+                <input id="design-name" class="text" type="text" placeholder="Name this design" maxlength="40">
+                <button id="design-save" type="button">Save</button>
+              </div>
+              <ul id="designs"></ul>
+            </div>
+          </details>
         </div>
       </section>
 

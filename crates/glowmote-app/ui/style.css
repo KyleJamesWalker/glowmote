@@ -270,3 +270,37 @@ input[type="number"] {
 .channel[data-ch="temp"] input[type="range"] { background: linear-gradient(90deg, #5fa8ff, var(--track), #ffae42); }
 .channel[data-ch="tint"] input[type="range"] { background: linear-gradient(90deg, #34c759, var(--track), #e04fd0); }
 .channel[data-ch="temp"], .channel[data-ch="tint"] { --ch: var(--accent); }
+
+.arm-head { justify-content: space-between; }
+.arm-head .arm-label { flex: 1; }
+.arm-head button { padding: 2px 10px; font-size: 12px; border-radius: 6px; background: #2b2938; color: #f1f0f6; }
+.arm.collapsed .dots { display: none; }
+
+.mini-color {
+  -webkit-appearance: none; appearance: none;
+  width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+}
+.mini-color::-webkit-color-swatch-wrapper { padding: 0; }
+.mini-color::-webkit-color-swatch { border: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .15); }
+.mini-color::-moz-color-swatch { border: 0; border-radius: 50%; }
+
+#diy-progress { min-height: 1.2em; margin: -6px 0; }
+
+.more { border-top: 1px solid var(--card-border); padding-top: 10px; }
+.more summary { cursor: pointer; color: var(--muted); font-size: 14px; list-style: none; }
+.more summary::before { content: "\25B8"; display: inline-block; margin-right: 8px; transition: transform .15s; }
+.more[open] summary::before { transform: rotate(90deg); }
+.more[open] > :not(summary) { margin-top: 12px; }
+
+input.text {
+  font: inherit; flex: 1; min-width: 0; padding: 8px 12px;
+  border: 1px solid var(--card-border); border-radius: 10px;
+  background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text);
+}
+#designs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#designs:empty::before { content: "No saved designs yet."; color: var(--muted); font-size: 13px; }
+#designs li { display: flex; align-items: center; gap: 8px; }
+#designs .design-apply { flex: 1; text-align: left; display: flex; align-items: center; gap: 10px; }
+#designs .swatches { display: inline-flex; }
+#designs .swatches span { width: 12px; height: 12px; border-radius: 50%; margin-left: -3px; box-shadow: 0 0 0 2px var(--card); }
+#designs .design-delete { padding: 6px 10px; color: var(--muted); }
