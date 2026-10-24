@@ -187,6 +187,22 @@ Do not send these until a capture confirms the exact bytes.
 | `DOOT`, `DOOTCP` | bulk DIY upload | `BleProtocol.graffiti(List)`, `sendDootCp` |
 | `DEN 01` | enter DIY, variant | `enterDiyMode1` |
 
+## Firmware
+
+The vendor app bundles OTA images in `assets/ota/*.ufw` for 14 other product lines; none is for
+the reference device's `TR2411R003-07`.
+
+| Images | Chip (from the decrypted header) |
+|---|---|
+| `TR2107R012-4` … `TR2208R009-04` (12 files) | JieLi AC636N |
+| `TR2210R004-08`, `TR2309R002-02` | JieLi AC632N |
+
+The images use JieLi's CRC-16 stream cipher: XOR with the low byte of a 16-bit state that
+steps as `state = (state << 1) ^ (0x1021 if state & 0x8000 else 0)`, starting at the default
+key `0xffff`. That decrypts each file's first block (magic, then the chip name at `0x10`); the
+data after `0x40` uses separately seeded blocks, not yet mapped. JieLi publishes an
+Apache-2.0 SDK for both chips: [Jieli-Tech/fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK).
+
 ## Capturing more
 
 1. Phone: Developer options → **Enable Bluetooth HCI snoop log → Enabled** (not Filtered), then
