@@ -39,6 +39,9 @@ decode() {
   echo "decoded: $out ($(grep -c '^[0-9]' "$out") ATT packets)"
   echo "packets per connection (keep only the light's before committing):"
   grep -o 'conn=0x[0-9a-f]*' "$out" | sort | uniq -c | sed 's/^/  /'
+  local predictions=$root/research/firmware/predictions/predict.txt
+  [ -f "$predictions" ] || predictions=
+  python3 -I "$root/tools/summarize_capture.py" "$out" $predictions
 }
 
 pull() {

@@ -109,6 +109,7 @@ cd crates/glowmote-app && cargo tauri android build --debug --apk --target aarch
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
 | `docs/captures/` | Decoded vendor-app captures backing the confirmed commands. |
 | `tools/capture.sh` | Pulls the phone's snoop log over adb and decodes it into `docs/captures/`. |
+| `tools/summarize_capture.py` | Lists a decoded capture's commands by tag: confirmed, predicted from firmware, or new. |
 | `tools/parse_snoop.py` | Decodes an Android `btsnoop_hci.log` into ATT writes and notifications. |
 | `tools/ufw_tool.py` | Lists and decrypts JieLi `.ufw` firmware update images. |
 
