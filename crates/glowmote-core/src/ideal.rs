@@ -163,6 +163,20 @@ fn scale(c: Rgb, pct: u8) -> Rgb {
     Rgb::new(ch(c.r), ch(c.g), ch(c.b))
 }
 
+/// Asks for one of the two firmware version strings (`VE 00` and `VE 01`); see [`parse_version`].
+pub fn version_query(second: bool) -> Packet {
+    tagged(b"VE", &[second as u8])
+}
+
+/// Parses a `VE` reply such as `V024.11.03.7`.
+pub fn parse_version(plain: &Packet) -> Option<&str> {
+    let len = plain[0] as usize;
+    let text = std::str::from_utf8(plain.get(1..1 + len)?).ok()?;
+    let text = text.trim_end_matches('\0');
+    let mut chars = text.chars();
+    (chars.next() == Some('V') && chars.next().is_some_and(|c| c.is_ascii_digit())).then_some(text)
+}
+
 /// Parses a decrypted notification. Only the first `len + 1` bytes are meaningful; the rest
 /// is stale data from earlier replies.
 pub fn parse_ack(plain: &Packet) -> Option<&str> {
@@ -303,6 +317,28 @@ mod tests {
         let done = decrypt(&hex!("33e943ec5a7cfc5975cdaae497bf25f2"));
         assert_eq!(parse_ack(&mult), Some("MULT"));
         assert_eq!(parse_ack(&done), Some("MULTCP"));
+    }
+
+    #[test]
+    fn version_queries_match_capture() {
+        assert_eq!(
+            encrypt(&version_query(false)),
+            hex!("263a91cc5f1bf003ce437b733478ada2")
+        );
+        assert_eq!(
+            encrypt(&version_query(true)),
+            hex!("d12e61ad95a00bd3c56bee6f9cb545fe")
+        );
+    }
+
+    #[test]
+    fn parses_version_replies() {
+        let first = decrypt(&hex!("46ab4f31aab2c94a189d69be3420fabc"));
+        let second = decrypt(&hex!("28666480d835f1b014ca8ea867a606ab"));
+        assert_eq!(parse_version(&first), Some("V024.11.03.7"));
+        assert_eq!(parse_version(&second), Some("V124.11.66.1"));
+        let ack = decrypt(&hex!("e04875cfea0dc30d20e2a01dfb20c6b6"));
+        assert_eq!(parse_version(&ack), None);
     }
 
     #[test]
