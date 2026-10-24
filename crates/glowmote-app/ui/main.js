@@ -290,6 +290,7 @@ for (const tab of document.querySelectorAll('[role="tab"]')) {
     }
     previewingWhite = false;
     scenePlaying = false;
+    if (tab.id === "tab-diy") selectSlot(currentSlot);
   });
 }
 
@@ -510,6 +511,67 @@ function applyGradient() {
   }
 }
 
+// Paint slots: click to paint with a slot, click the selected slot again to change its color.
+
+const SLOT_DEFAULTS = ["#ff3b30", "#34c759", "#007aff", "#ffd8a8", "#ff9500", "#af52de"];
+let slots = [...SLOT_DEFAULTS];
+let currentSlot = 0;
+
+function loadSlots() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("paintSlots") ?? "null");
+    if (Array.isArray(saved) && saved.length === SLOT_DEFAULTS.length) slots = saved;
+  } catch {}
+}
+
+function saveSlots() {
+  try {
+    localStorage.setItem("paintSlots", JSON.stringify(slots));
+  } catch {}
+}
+
+function showSlots() {
+  $("paint-slots").replaceChildren(...slots.map((hex, i) => {
+    const slot = document.createElement("button");
+    slot.type = "button";
+    slot.setAttribute("role", "radio");
+    slot.setAttribute("aria-checked", String(i === currentSlot));
+    slot.setAttribute("aria-label", `Paint color ${i + 1}: ${hex}`);
+    slot.title = i === currentSlot ? "Click to change this color" : `Paint with ${hex} (key ${i + 1})`;
+    slot.style.setProperty("--slot", hex);
+    const key = document.createElement("span");
+    key.textContent = i + 1;
+    slot.append(key);
+    slot.addEventListener("click", () => {
+      if (i === currentSlot) {
+        $("slot-color").value = slots[i];
+        $("slot-color").click();
+      } else {
+        selectSlot(i);
+      }
+    });
+    return slot;
+  }));
+}
+
+function selectSlot(i) {
+  currentSlot = i;
+  pickColor(slots[i], false);
+  showSlots();
+}
+
+$("slot-color").addEventListener("input", () => {
+  slots[currentSlot] = $("slot-color").value;
+  saveSlots();
+  selectSlot(currentSlot);
+});
+
+window.addEventListener("keydown", (e) => {
+  if ($("panel-diy").hidden || e.target.matches("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const i = Number(e.key) - 1;
+  if (i >= 0 && i < slots.length) selectSlot(i);
+});
+
 let painting = false;
 $("strip").addEventListener("pointerdown", (e) => {
   if (e.target.dataset.index === undefined) return;
@@ -653,4 +715,6 @@ pickColor($("color").value, false);
 loadLayout();
 buildStrip();
 showDesigns();
+loadSlots();
+showSlots();
 resume();

@@ -64,7 +64,7 @@
         <div class="row">
           <div>
             <h3>Paint LEDs</h3>
-            <p class="hint">Uses the color from the orb.</p>
+            <p class="hint">Pick a paint color below, or keys 1–6.</p>
           </div>
           <label class="switch"><input id="diy-mode" type="checkbox"><span></span><span class="sr">DIY mode</span></label>
         </div>
@@ -77,6 +77,8 @@
           </div>
         </div>
         <div id="diy-tools" class="stack" inert>
+          <div class="paint-slots" id="paint-slots" role="radiogroup" aria-label="Paint color"></div>
+          <input id="slot-color" class="sr" type="color" tabindex="-1" aria-hidden="true">
           <div class="slider">
             <label for="diy-brightness">Brightness <output id="diy-brightness-value">50%</output></label>
             <input id="diy-brightness" type="range" min="0" max="100" value="50">
