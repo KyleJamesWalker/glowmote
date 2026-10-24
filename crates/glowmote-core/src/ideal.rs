@@ -239,29 +239,113 @@ const SCENE_FRAME_LEN: usize = 98;
 /// Scene header (`MULT`) for a two-color effect. Send it, wait for `MULTOK`, then write
 /// [`scene_frame`] unencrypted to [`BULK_WRITE_CHAR_UUID`]; the light finishes with `MULTCPOK`.
 pub fn scene(reversed: bool, speed_pct: u8, brightness_pct: u8) -> Packet {
-    tagged(
-        b"MULT",
-        &[
-            SCENE_EFFECT,
-            reversed as u8,
-            0x64,
-            speed_pct.min(100),
-            2,
-            brightness_pct.min(100),
-        ],
+    mult(
+        SCENE_EFFECT,
+        reversed,
+        speed_pct.min(100),
+        2,
+        brightness_pct.min(100),
     )
 }
 
 /// The color frame that follows [`scene`]: each channel scaled by brightness and truncated.
 pub fn scene_frame(colors: [Rgb; 2], brightness_pct: u8) -> [u8; SCENE_FRAME_LEN] {
-    let pct = brightness_pct.min(100) as u16;
-    let ch = |v: u8| (v as u16 * pct / 100) as u8;
+    mult_frame(&colors, brightness_pct.min(100))
+}
+
+/// Number of `MULT` effects. The firmware indexes a 12-slot array with the effect unchecked.
+pub const SCENE_EFFECT_COUNT: u8 = 12;
+/// More colors overflow the firmware's color slots; zero divides by zero.
+pub const MAX_SCENE_COLORS: usize = 7;
+
+/// A `MULT` scene with any effect and 1 to [`MAX_SCENE_COLORS`] colors: the header and the
+/// color frame, sent as for [`scene`].
+pub fn multi_color(
+    effect: u8,
+    reversed: bool,
+    speed_pct: u8,
+    colors: &[Rgb],
+    brightness_pct: u8,
+) -> Result<(Packet, [u8; SCENE_FRAME_LEN]), OutOfRange> {
+    check("scene effect", effect, 0, SCENE_EFFECT_COUNT as u16 - 1)?;
+    check("speed", speed_pct, 0, 100)?;
+    check("brightness", brightness_pct, 0, 100)?;
+    let count = colors.len().min(u8::MAX.into()) as u8;
+    check("color count", count, 1, MAX_SCENE_COLORS as u16)?;
+    Ok((
+        mult(effect, reversed, speed_pct, count, brightness_pct),
+        mult_frame(colors, brightness_pct),
+    ))
+}
+
+fn mult(effect: u8, reversed: bool, speed: u8, count: u8, brightness: u8) -> Packet {
+    tagged(
+        b"MULT",
+        &[effect, reversed as u8, 0x64, speed, count, brightness],
+    )
+}
+
+fn mult_frame(colors: &[Rgb], pct: u8) -> [u8; SCENE_FRAME_LEN] {
+    let ch = |v: u8| (v as u16 * pct as u16 / 100) as u8;
     let mut frame = [0u8; SCENE_FRAME_LEN];
-    frame[0] = 7; // data length + 1
-    for (i, Rgb { r, g, b }) in colors.into_iter().enumerate() {
+    frame[0] = (colors.len() * 3 + 1) as u8; // data length + 1
+    for (i, &Rgb { r, g, b }) in colors.iter().enumerate() {
         frame[2 + i * 3..5 + i * 3].copy_from_slice(&[ch(r), ch(g), ch(b)]);
     }
     frame
+}
+
+// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
+#[cfg(test)]
+mod predicted_multi_color {
+    use super::*;
+    use hex_literal::hex;
+
+    const RED: Rgb = Rgb::new(0xff, 0, 0);
+    const GREEN: Rgb = Rgb::new(0, 0xff, 0);
+    const BLUE: Rgb = Rgb::new(0, 0, 0xff);
+    const WHITE: Rgb = Rgb::new(0xff, 0xff, 0xff);
+    const SEVEN: [Rgb; 7] = [RED, GREEN, BLUE, WHITE, RED, GREEN, BLUE];
+
+    #[test]
+    fn multi_color_headers_match_prediction() {
+        let (header, _) = multi_color(0, false, 50, &[RED, GREEN, BLUE], 100).unwrap();
+        assert_eq!(encrypt(&header), hex!("c2e6147029409bbe4a5740f76a26975b"));
+        let (header, _) = multi_color(11, true, 100, &SEVEN, 50).unwrap();
+        assert_eq!(encrypt(&header), hex!("17b76b1e7a8707ec08851d411b77a409"));
+    }
+
+    #[test]
+    fn multi_color_frames_carry_every_color() {
+        let (_, frame) = multi_color(0, false, 50, &[RED, GREEN, BLUE], 100).unwrap();
+        assert_eq!(&frame[..11], &hex!("0a00ff000000ff000000ff"));
+        assert!(frame[11..].iter().all(|&b| b == 0));
+        let (_, frame) = multi_color(11, true, 100, &SEVEN, 50).unwrap();
+        assert_eq!(frame[0], 22);
+        assert_eq!(&frame[11..14], &hex!("7f7f7f"));
+        assert_eq!(&frame[21..23], &hex!("007f"));
+        assert!(frame[23..].iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn two_color_effect_7_matches_scene_capture() {
+        let colors = [Rgb::new(0xff, 0, 0xff), Rgb::new(0x14, 0, 0xcb)];
+        let (header, frame) = multi_color(7, false, 100, &colors, 100).unwrap();
+        assert_eq!(encrypt(&header), hex!("29d3a784888e6dcd9baaccee9809a18c"));
+        assert_eq!(frame, scene_frame(colors, 100));
+    }
+
+    #[test]
+    fn multi_color_rejects_out_of_range_fields() {
+        let max = [RED; MAX_SCENE_COLORS];
+        assert!(multi_color(SCENE_EFFECT_COUNT - 1, false, 100, &max, 100).is_ok());
+        assert!(multi_color(SCENE_EFFECT_COUNT, false, 50, &[RED], 100).is_err());
+        assert!(multi_color(0, false, 50, &[], 100).is_err());
+        assert!(multi_color(0, false, 50, &[RED; MAX_SCENE_COLORS + 1], 100).is_err());
+        assert!(multi_color(0, false, 50, &[RED; 300], 100).is_err());
+        assert!(multi_color(0, false, 101, &[RED], 100).is_err());
+        assert!(multi_color(0, false, 50, &[RED], 101).is_err());
+    }
 }
 
 fn scale(c: Rgb, pct: u8) -> Rgb {
