@@ -51,6 +51,22 @@ enum Action {
         #[arg(short, long, default_value_t = 100, value_parser = clap::value_parser!(u8).range(0..=100))]
         brightness: u8,
     },
+    /// Play the two-color scene effect
+    Scene {
+        /// First color, RRGGBB hex
+        first: Rgb,
+        /// Second color, RRGGBB hex
+        second: Rgb,
+        /// 0-100
+        #[arg(short, long, default_value_t = 50, value_parser = clap::value_parser!(u8).range(0..=100))]
+        speed: u8,
+        /// 0-100
+        #[arg(short, long, default_value_t = 100, value_parser = clap::value_parser!(u8).range(0..=100))]
+        brightness: u8,
+        /// Run the effect in the other direction
+        #[arg(long)]
+        reverse: bool,
+    },
     /// Enter DIY mode, as the vendor app does before pixel and fill commands
     Diy,
     /// Leave DIY mode
@@ -91,6 +107,22 @@ impl Action {
             Action::On => ideal::power(true),
             Action::Off => ideal::power(false),
             Action::Color { rgb, brightness } => ideal::solid_color(rgb, brightness),
+            Action::Scene {
+                first,
+                second,
+                speed,
+                brightness,
+                reverse,
+            } => {
+                let header = ideal::scene(reverse, speed, brightness);
+                let frame = ideal::scene_frame([first, second], brightness);
+                if light.send_scene(&header, &frame).await? {
+                    println!("ok (MULTCP)");
+                } else {
+                    println!("sent, but the light did not confirm the colors");
+                }
+                return Ok(());
+            }
             Action::Diy => {
                 return light
                     .send_unacked(&ideal::diy_enter())
