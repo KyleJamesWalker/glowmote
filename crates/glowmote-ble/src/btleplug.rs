@@ -84,6 +84,14 @@ impl Link {
             .await?)
     }
 
+    pub(crate) async fn write_rhythm(&self, data: &[u8]) -> Result<()> {
+        let rhythm = characteristic(&self.peripheral, ideal::RHYTHM_CHAR_UUID)?;
+        Ok(self
+            .peripheral
+            .write(&rhythm, data, WriteType::WithoutResponse)
+            .await?)
+    }
+
     pub(crate) async fn read_model(&self) -> Result<Option<String>> {
         let description = Uuid::from_u128(0x0000_2901_0000_1000_8000_0080_5f9b_34fb);
         let descriptor = self

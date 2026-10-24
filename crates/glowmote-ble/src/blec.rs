@@ -122,6 +122,18 @@ impl Link {
         Ok(())
     }
 
+    pub(crate) async fn write_rhythm(&self, data: &[u8]) -> Result<()> {
+        self.connection
+            .send_data(
+                uuid(ideal::RHYTHM_CHAR_UUID),
+                None,
+                data,
+                WriteType::WithoutResponse,
+            )
+            .await?;
+        Ok(())
+    }
+
     pub(crate) async fn read_model(&self) -> Result<Option<String>> {
         Ok(None)
     }

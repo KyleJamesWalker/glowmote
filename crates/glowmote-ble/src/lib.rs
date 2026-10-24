@@ -167,6 +167,17 @@ impl Light {
 
     /// Sends a packet the light never acknowledges, such as `DEN` or `DSTOP`.
     pub async fn send_unacked(&mut self, plain: &ideal::Packet) -> Result<()> {
+        self.ready_to_write().await?;
+        self.link.write(&ideal::encrypt(plain)).await
+    }
+
+    /// Sends one music level sample from [`ideal::rhythm`] on the rhythm characteristic.
+    pub async fn send_rhythm(&mut self, plain: &ideal::Packet) -> Result<()> {
+        self.ready_to_write().await?;
+        self.link.write_rhythm(&ideal::encrypt(plain)).await
+    }
+
+    async fn ready_to_write(&mut self) -> Result<()> {
         if !self.link.is_connected().await? {
             (self.link, self.notifications) = backend::Link::open(&self.peripheral).await?;
         }
@@ -174,7 +185,7 @@ impl Light {
             tokio::time::sleep_until(last + MIN_SEND_INTERVAL).await;
         }
         self.last_write = Some(Instant::now());
-        self.link.write(&ideal::encrypt(plain)).await
+        Ok(())
     }
 
     pub async fn disconnect(self) -> Result<()> {

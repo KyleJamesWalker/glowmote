@@ -13,6 +13,8 @@ pub const WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129600";
 pub const NOTIFY_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129601";
 /// Takes plaintext data frames, such as scene colors.
 pub const BULK_WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-92541612960a";
+/// Takes encrypted music rhythm levels; see [`rhythm`].
+pub const RHYTHM_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-92541612960b";
 
 pub const NAME_PREFIXES: [&str; 2] = ["ISP-", "IDL-"];
 
@@ -701,6 +703,63 @@ pub fn parse_ack(plain: &Packet) -> Option<&str> {
     let body = plain.get(1..1 + len)?;
     let text = std::str::from_utf8(body).ok()?;
     text.strip_suffix("OK")
+}
+
+/// Number of music rhythm effects the app offers this product line.
+pub const RHYTHM_EFFECT_COUNT: u8 = 10;
+
+/// One music level sample for [`RHYTHM_CHAR_UUID`], at most one per 50 ms; the first switches the
+/// light to music mode. `level` is 1–100. Not acknowledged.
+pub fn rhythm(effect: u8, level: u8) -> Result<Packet, OutOfRange> {
+    check("rhythm effect", effect, 0, RHYTHM_EFFECT_COUNT as u16 - 1)?;
+    check("rhythm level", level, 1, 100)?;
+    let mut p = [0u8; 16];
+    p[..3].copy_from_slice(&[0x02, effect, level]);
+    Ok(p)
+}
+
+/// Leaves music mode (`RSTOPR`) and restores the previous mode. Not acknowledged.
+pub fn rhythm_stop() -> Packet {
+    tagged(b"RSTOPR", &[])
+}
+
+// No firmware prediction exists for the rhythm block: its ciphertexts encrypt the bytes
+// BleProtocol.sendRhythm builds. RSTOPR is predicted from the TR2309R002-02 firmware.
+#[cfg(test)]
+mod predicted_rhythm {
+    use super::*;
+    use hex_literal::hex;
+
+    #[test]
+    fn rhythm_matches_app_builder() {
+        assert_eq!(
+            encrypt(&rhythm(0, 1).unwrap()),
+            hex!("3e1142824947852021989cf5b3c35921")
+        );
+        assert_eq!(
+            encrypt(&rhythm(9, 100).unwrap()),
+            hex!("9d143a16e5c9e36cfa0ac48ff6cc4e53")
+        );
+        assert_eq!(
+            encrypt(&rhythm(5, 50).unwrap()),
+            hex!("9a98003c58c44ca9ac9114937970eb19")
+        );
+    }
+
+    #[test]
+    fn rhythm_rejects_out_of_range_fields() {
+        assert!(rhythm(RHYTHM_EFFECT_COUNT, 50).is_err());
+        assert!(rhythm(0, 0).is_err());
+        assert!(rhythm(0, 101).is_err());
+    }
+
+    #[test]
+    fn rhythm_stop_matches_prediction() {
+        assert_eq!(
+            encrypt(&rhythm_stop()),
+            hex!("b418a9994f9adab07d78a24008161c3f")
+        );
+    }
 }
 
 #[cfg(test)]
