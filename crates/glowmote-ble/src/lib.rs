@@ -104,8 +104,23 @@ impl Light {
     /// acknowledgement arrived. Reconnects first if the light dropped the connection.
     pub async fn send(&mut self, plain: &ideal::Packet) -> Result<Option<String>> {
         self.send_unacked(plain).await?;
+        Ok(self.wait_ack(command_tag(plain)).await)
+    }
 
-        let tag = command_tag(plain);
+    /// Sends a scene: the `MULT` header, then its color frame on the bulk channel. Returns
+    /// `false` if the light did not confirm the colors with `MULTCPOK`.
+    pub async fn send_scene(&mut self, header: &ideal::Packet, frame: &[u8]) -> Result<bool> {
+        if self.send(header).await?.is_none() {
+            return Ok(false);
+        }
+        let bulk = characteristic(&self.peripheral, ideal::BULK_WRITE_CHAR_UUID)?;
+        self.peripheral
+            .write(&bulk, frame, WriteType::WithoutResponse)
+            .await?;
+        Ok(self.wait_ack("MULTCP").await.is_some())
+    }
+
+    async fn wait_ack(&mut self, tag: &str) -> Option<String> {
         let ack = tokio::time::timeout(ACK_TIMEOUT, async {
             while let Some(n) = self.notifications.next().await {
                 if let Ok(block) = <ideal::Packet>::try_from(n.value.as_slice())
@@ -118,7 +133,7 @@ impl Light {
             None
         })
         .await;
-        Ok(ack.ok().flatten())
+        ack.ok().flatten()
     }
 
     /// Sends a packet the light never acknowledges, such as `DEN` or `DSTOP`.
