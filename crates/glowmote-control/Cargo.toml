@@ -1,0 +1,15 @@
+[package]
+name = "glowmote-control"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+glowmote-ble = { path = "../glowmote-ble" }
+glowmote-core = { path = "../glowmote-core" }
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1.54.1", features = ["macros", "rt"] }

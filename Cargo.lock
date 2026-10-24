@@ -1374,6 +1374,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "glowmote-control"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "glowmote-ble",
+ "glowmote-core",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "glowmote-core"
 version = "0.1.0"
 dependencies = [
