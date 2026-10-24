@@ -11,9 +11,12 @@ use btleplug::api::{
 use btleplug::platform::{Manager, Peripheral};
 use futures::{Stream, StreamExt};
 use glowmote_core::ideal;
+use tokio::time::Instant;
 use uuid::Uuid;
 
 const ACK_TIMEOUT: Duration = Duration::from_secs(2);
+/// The vendor app never sends commands closer together than this.
+const MIN_SEND_INTERVAL: Duration = Duration::from_millis(50);
 
 pub struct Found {
     pub name: String,
@@ -80,6 +83,7 @@ pub struct Light {
     peripheral: Peripheral,
     write: Characteristic,
     notifications: Notifications,
+    last_write: Option<Instant>,
 }
 
 impl Light {
@@ -91,6 +95,7 @@ impl Light {
             peripheral,
             write,
             notifications,
+            last_write: None,
         })
     }
 
@@ -100,6 +105,10 @@ impl Light {
         if !self.peripheral.is_connected().await? {
             (self.write, self.notifications) = open(&self.peripheral).await?;
         }
+        if let Some(last) = self.last_write {
+            tokio::time::sleep_until(last + MIN_SEND_INTERVAL).await;
+        }
+        self.last_write = Some(Instant::now());
         self.peripheral
             .write(
                 &self.write,
