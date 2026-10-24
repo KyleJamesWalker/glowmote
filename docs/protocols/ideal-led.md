@@ -220,10 +220,37 @@ the reference device's `TR2411R003-07`.
 | `TR2210R004-08`, `TR2309R002-02` | JieLi AC632N |
 
 The images use JieLi's CRC-16 stream cipher: XOR with the low byte of a 16-bit state that
-steps as `state = (state << 1) ^ (0x1021 if state & 0x8000 else 0)`, starting at the default
-key `0xffff`. That decrypts each file's first block (magic, then the chip name at `0x10`); the
-data after `0x40` uses separately seeded blocks, not yet mapped. JieLi publishes an
-Apache-2.0 SDK for both chips: [Jieli-Tech/fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK).
+steps as `state = (state << 1) ^ (0x1021 if state & 0x8000 else 0)`. All 14 decrypt fully, and
+every file inside passes its stored CRC-16:
+
+| Region | Keystream restarts | Seed |
+|---|---|---|
+| `.ufw` header (0x40 B) and entry records (0x50 B each) | per record | `0xffff` |
+| Small `.ufw` entries (`isd_config.ini`, `script.ver`, …) | every 32 B | `key ^ ((ufw_offset >> 2) & 0xffff)` |
+| `ota.bin` (JieLi's stock OTA loader) | not encrypted | |
+| Flash header, flash file entries, `uboot.boot` | per record | `0xffff` |
+| App area (`app.bin`, `cfg_tool.bin`, …) | every 32 B | `key ^ ((offset_from_area_start >> 2) & 0xffff)` |
+
+`key` is the vendor's 16-bit chip key, `0xdb62` in every image, found by brute force and
+confirmed by the `app.bin` CRC. `app.bin` loads at `0x01e00120` and is not compressed. JieLi
+publishes an Apache-2.0 SDK for both chips:
+[Jieli-Tech/fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK).
+
+The images fall into two protocol families. `TR2107`/`TR2110` (`IDL-` names) use a different
+command set (`LEDON`, `DATS`, `PLAY`, `MANY`). `TR2202` onward (`ISP-` names) speak this
+protocol; the closest to the reference device is `TR2309R002-02` (AC632N, `ISP-`, versions
+`V023.9.2.2` / `V122.3.137.8`). Its reply table, in firmware order:
+
+`TURNOK SGLSOK MULTOK SPLAYOK SCHDOK LAMPTOK LAMPNOK DOOTCPOK DOOTOK CONNECTOK DIRECTOK DOODOK
+SPLACPOK MULTCPOK SGLSCPOK`, plus `LAMPQ`, `DOOTREOK` and `SPLAREOK` elsewhere in `.data`.
+`TR2208` and `TR2210` also have `LAMPNMAX`.
+
+Command tags never appear as strings, so the commands behind the uncaptured replies are
+inferred from their names only: `SPLAY` (a third bulk upload with `…REOK`/`…CPOK` phases),
+`SCHD` (schedules), `LAMPT`, `LAMPN` (LED count, with an upper limit where `LAMPNMAX` exists),
+`LAMPQ` (query), `DIRECT`, and a bulk-completion step for `SGLS` (`SGLSCPOK`). Effect counts and
+parameter limits live in code; reading them needs a pi32v2 disassembler such as
+[ghidra-jieli](https://github.com/virtualabs/ghidra-jieli).
 
 ## Capturing more
 
