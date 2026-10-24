@@ -70,7 +70,7 @@ failed or did not acknowledge.
 
 | Endpoint | Body | `ok` |
 |---|---|---|
-| `GET /api/status` | | connected light's name, or `null` |
+| `GET` or `POST /api/status` | (`{}` for `POST`) | connected light's name, or `null` |
 | `POST /api/scan_lights` | `{}` | light names |
 | `POST /api/connect` | `{"name"}` | `null` |
 | `POST /api/disconnect` | `{}` | `null` |

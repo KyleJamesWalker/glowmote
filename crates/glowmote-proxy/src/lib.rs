@@ -37,7 +37,7 @@ pub fn inject_shim(index: &str) -> String {
 
 pub fn router<R: Radio>(controller: Arc<Controller<R>>) -> Router {
     Router::new()
-        .route("/api/status", get(status::<R>))
+        .route("/api/status", get(status::<R>).post(status_command::<R>))
         .route("/api/scan_lights", post(scan_lights::<R>))
         .route("/api/connect", post(connect::<R>))
         .route("/api/disconnect", post(disconnect::<R>))
@@ -142,6 +142,11 @@ struct Fill {
 
 async fn status<R: Radio>(State(c): Ctl<R>) -> Reply {
     Ok(Json(json!({ "ok": c.status().await })))
+}
+
+/// The UI's `invoke("status")` arrives as a POST like every other command.
+async fn status_command<R: Radio>(state: Ctl<R>, _: Args<NoArgs>) -> Reply {
+    status(state).await
 }
 
 async fn scan_lights<R: Radio>(State(c): Ctl<R>, _: Args<NoArgs>) -> Reply {
@@ -379,6 +384,10 @@ mod tests {
         );
         assert_eq!(
             call(&app, "GET", "/api/status", None).await.1,
+            json!({ "ok": "ISP-1" })
+        );
+        assert_eq!(
+            call(&app, "POST", "/api/status", Some("{}")).await.1,
             json!({ "ok": "ISP-1" })
         );
         assert_eq!(
