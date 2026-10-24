@@ -47,6 +47,44 @@ cargo run -p glowmote-app
 For a bundled app, install the CLI (`cargo install tauri-cli --version "^2" --locked`) and run
 `cargo tauri build` in `crates/glowmote-app`.
 
+## HTTP proxy
+
+`glowmote-proxy` holds one connection and shares it over HTTP: open the desktop app's UI in any
+browser, or script the lights with `curl`.
+
+```sh
+cargo run -p glowmote-proxy -- --device ISP-50542B   # then browse to http://127.0.0.1:8484
+curl -H 'content-type: application/json' -d '{"rgb":"ff0000","brightness":50}' http://127.0.0.1:8484/api/color
+```
+
+`--device` connects on start to the light whose name starts with it; without it, scan and
+connect from the UI or the API. `--scan-secs` sets the scan time (default 5).
+
+**`--listen 0.0.0.0:8484` lets anyone on your network control the lights. There is no
+authentication.** The default, `127.0.0.1:8484`, accepts this machine only.
+
+Every `POST` takes a JSON body (`{}` when there are no arguments) and needs
+`Content-Type: application/json`. Responses are `{"ok": value}`, or `{"error": "..."}` with a 4xx
+or 5xx status: 400 bad argument, 404 unknown light or command, 409 not connected, 502 the light
+failed or did not acknowledge.
+
+| Endpoint | Body | `ok` |
+|---|---|---|
+| `GET /api/status` | | connected light's name, or `null` |
+| `POST /api/scan_lights` | `{}` | light names |
+| `POST /api/connect` | `{"name"}` | `null` |
+| `POST /api/disconnect` | `{}` | `null` |
+| `POST /api/power` | `{"on"}` | acknowledged tag |
+| `POST /api/color` | `{"rgb", "brightness"}` | acknowledged tag |
+| `POST /api/scene` | `{"first", "second", "speed", "brightness", "reverse"}` | `null` |
+| `POST /api/diy` | `{"on"}` | `null` |
+| `POST /api/diy_pixel` | `{"index", "leds", "rgb", "brightness"}` | acknowledged tag |
+| `POST /api/diy_fill` | `{"leds", "rgb", "brightness"}` | acknowledged tag |
+
+Colors are `RRGGBB` hex, with or without `#`; brightness and speed are 0-100. Commands from all
+clients run one at a time in arrival order, so send DIY pixels sequentially to keep their order.
+
+
 ## Android
 
 The desktop app also builds for Android. Bluetooth does not work there yet: btleplug needs an
@@ -63,7 +101,9 @@ cd crates/glowmote-app && cargo tauri android build --debug --apk --target aarch
 |---|---|
 | `crates/glowmote-core` | Protocol encoders, pure bytes, no I/O. Tests use captured packets. |
 | `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug): scanning and a connection that stays open across commands. |
+| `crates/glowmote-control` | `Controller`: the shared light connection and the command set the app and proxy expose. |
 | `crates/glowmote-app` | Tauri 2 desktop app; the UI is plain HTML/JS in `ui/`, no npm. |
+| `crates/glowmote-proxy` | `glowmote-proxy` binary: the commands over HTTP, plus the app's UI for browsers. |
 | `crates/glowmote-cli` | `glowmote` binary: one-shot commands, `shell` and `probe`. |
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
 | `docs/captures/` | Decoded vendor-app captures backing the confirmed commands. |
