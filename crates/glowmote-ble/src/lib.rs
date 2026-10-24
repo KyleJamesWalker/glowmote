@@ -103,20 +103,7 @@ impl Light {
     /// Sends a plaintext packet and returns the acknowledged tag, or `None` if no matching
     /// acknowledgement arrived. Reconnects first if the light dropped the connection.
     pub async fn send(&mut self, plain: &ideal::Packet) -> Result<Option<String>> {
-        if !self.peripheral.is_connected().await? {
-            (self.write, self.notifications) = open(&self.peripheral).await?;
-        }
-        if let Some(last) = self.last_write {
-            tokio::time::sleep_until(last + MIN_SEND_INTERVAL).await;
-        }
-        self.last_write = Some(Instant::now());
-        self.peripheral
-            .write(
-                &self.write,
-                &ideal::encrypt(plain),
-                WriteType::WithoutResponse,
-            )
-            .await?;
+        self.send_unacked(plain).await?;
 
         let tag = command_tag(plain);
         let ack = tokio::time::timeout(ACK_TIMEOUT, async {
@@ -132,6 +119,25 @@ impl Light {
         })
         .await;
         Ok(ack.ok().flatten())
+    }
+
+    /// Sends a packet the light never acknowledges, such as `DEN` or `DSTOP`.
+    pub async fn send_unacked(&mut self, plain: &ideal::Packet) -> Result<()> {
+        if !self.peripheral.is_connected().await? {
+            (self.write, self.notifications) = open(&self.peripheral).await?;
+        }
+        if let Some(last) = self.last_write {
+            tokio::time::sleep_until(last + MIN_SEND_INTERVAL).await;
+        }
+        self.last_write = Some(Instant::now());
+        self.peripheral
+            .write(
+                &self.write,
+                &ideal::encrypt(plain),
+                WriteType::WithoutResponse,
+            )
+            .await?;
+        Ok(())
     }
 
     pub async fn disconnect(self) -> Result<()> {
