@@ -1,0 +1,134 @@
+07:08:44.924 conn=0x040 -> WRITE_REQ h=0x000e raw=0100
+07:08:45.104 conn=0x040 -> WRITE_REQ h=0x0085 raw=0100
+07:08:45.993 conn=0x040 -> READ_REQ  h=0x0007 raw=
+07:08:46.014 conn=0x040 <- READ_RSP  h=0x5254 raw=32343131523030332d303700
+07:08:46.053 conn=0x040 -> WRITE_CMD h=0x0082 raw=0067c6697351ff4aec29cdbaabf2fbe346
+07:08:46.074 conn=0x040 <- NOTIFY    h=0x0084 raw=01023a02126fa284879236e9da27ba0b8d
+07:08:46.317 conn=0x040 -> WRITE_CMD h=0x0006 raw=79d1dba40919c246a8580ae7d11b7884
+                                 dec=05 54 55 52 4e 00 00 00 00 00 00 00 00 00 00 00  |.TURN...........|
+07:08:46.344 conn=0x040 <- NOTIFY    h=0x000d raw=e04875cfea0dc30d20e2a01dfb20c6b6
+                                 dec=06 54 55 52 4e 4f 4b 00 06 53 47 4c 53 4f 4b 00  |.TURNOK..SGLSOK.|
+07:08:48.102 conn=0x040 -> WRITE_CMD h=0x0006 raw=79d1dba40919c246a8580ae7d11b7884
+                                 dec=05 54 55 52 4e 00 00 00 00 00 00 00 00 00 00 00  |.TURN...........|
+07:08:48.128 conn=0x040 <- NOTIFY    h=0x000d raw=e04875cfea0dc30d20e2a01dfb20c6b6
+                                 dec=06 54 55 52 4e 4f 4b 00 06 53 47 4c 53 4f 4b 00  |.TURNOK..SGLSOK.|
+07:08:50.633 conn=0x040 -> WRITE_CMD h=0x0006 raw=84dd5042374150897ac82f39110968a8
+                                 dec=05 54 55 52 4e 01 00 00 00 00 00 00 00 00 00 00  |.TURN...........|
+07:08:50.663 conn=0x040 <- NOTIFY    h=0x000d raw=e04875cfea0dc30d20e2a01dfb20c6b6
+                                 dec=06 54 55 52 4e 4f 4b 00 06 53 47 4c 53 4f 4b 00  |.TURNOK..SGLSOK.|
+07:09:43.423 conn=0x040 -> WRITE_CMD h=0x0006 raw=afe660f741f6ae55466c1c00d19be75c
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 0c 00 ff 0c 00 32  |.SGLS..dP......2|
+07:09:43.444 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:49.586 conn=0x040 -> WRITE_CMD h=0x0006 raw=28b46127e50364d38bdeb45084b8a9ac
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 b0 ff 00 b0 32  |.SGLS..dP......2|
+07:09:49.610 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:50.888 conn=0x040 -> WRITE_CMD h=0x0006 raw=28b46127e50364d38bdeb45084b8a9ac
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 b0 ff 00 b0 32  |.SGLS..dP......2|
+07:09:50.915 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:51.820 conn=0x040 -> WRITE_CMD h=0x0006 raw=4353839848a46cacbe51d463361f6a72
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 e9 ff 00 e9 32  |.SGLS..dP......2|
+07:09:51.845 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:52.031 conn=0x040 -> WRITE_CMD h=0x0006 raw=97608f7d348e7904919076dcc47aaed1
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 5b ff 00 5b 32  |.SGLS..dP..[..[2|
+07:09:52.055 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:52.309 conn=0x040 -> WRITE_CMD h=0x0006 raw=f22ae2743208d2958790e6978963bd49
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 13 ff 00 13 32  |.SGLS..dP......2|
+07:09:52.340 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:52.620 conn=0x040 -> WRITE_CMD h=0x0006 raw=afe660f741f6ae55466c1c00d19be75c
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 0c 00 ff 0c 00 32  |.SGLS..dP......2|
+07:09:52.654 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:52.717 conn=0x040 -> WRITE_CMD h=0x0006 raw=afe660f741f6ae55466c1c00d19be75c
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 0c 00 ff 0c 00 32  |.SGLS..dP......2|
+07:09:52.744 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:53.189 conn=0x040 -> WRITE_CMD h=0x0006 raw=931e032cb8430d016166fe5c58d1517f
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 4a ff 00 4a 32  |.SGLS..dP..J..J2|
+07:09:53.225 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:53.627 conn=0x040 -> WRITE_CMD h=0x0006 raw=73baa3e311ef375b0c2965911e7f5357
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 00 ff 00 00 32  |.SGLS..dP......2|
+07:09:53.659 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:54.000 conn=0x040 -> WRITE_CMD h=0x0006 raw=304b582f7cefdf7c8a8d3435245e88cf
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 0a 00 ff 0a 00 32  |.SGLS..dP......2|
+07:09:54.035 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:54.163 conn=0x040 -> WRITE_CMD h=0x0006 raw=304b582f7cefdf7c8a8d3435245e88cf
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 0a 00 ff 0a 00 32  |.SGLS..dP......2|
+07:09:54.184 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:54.527 conn=0x040 -> WRITE_CMD h=0x0006 raw=384f0620c0f73cd277ad23c5d732dc1f
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 1c 00 ff 1c 00 32  |.SGLS..dP......2|
+07:09:54.560 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:54.628 conn=0x040 -> WRITE_CMD h=0x0006 raw=384f0620c0f73cd277ad23c5d732dc1f
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 1c 00 ff 1c 00 32  |.SGLS..dP......2|
+07:09:54.650 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:09:59.188 conn=0x040 -> WRITE_CMD h=0x0006 raw=73baa3e311ef375b0c2965911e7f5357
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 00 ff 00 00 32  |.SGLS..dP......2|
+07:09:59.224 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:12.756 conn=0x040 -> WRITE_CMD h=0x0006 raw=a06566adefd31c59d5c85979620ce9ef
+                                 dec=0f 53 47 4c 53 00 00 64 50 00 ff 00 00 ff 00 32  |.SGLS..dP......2|
+07:10:12.785 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:23.036 conn=0x040 -> WRITE_CMD h=0x0006 raw=c7f95a08c3583941208cca2d3e6e91c0
+                                 dec=0f 53 47 4c 53 00 00 64 50 00 00 ff 00 00 ff 32  |.SGLS..dP......2|
+07:10:23.060 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:36.824 conn=0x040 -> WRITE_CMD h=0x0006 raw=384f0620c0f73cd277ad23c5d732dc1f
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 1c 00 ff 1c 00 32  |.SGLS..dP......2|
+07:10:36.845 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:48.725 conn=0x040 -> WRITE_CMD h=0x0006 raw=df26e31f7bcc0b1bc6b9fa562ee54761
+                                 dec=0f 53 47 4c 53 00 00 64 50 e8 00 00 e8 00 00 32  |.SGLS..dP......2|
+07:10:48.754 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:48.932 conn=0x040 -> WRITE_CMD h=0x0006 raw=1ffba5ec60dd933a7a27fb30893c2878
+                                 dec=0f 53 47 4c 53 00 00 64 50 5b 00 00 5b 00 00 32  |.SGLS..dP[..[..2|
+07:10:48.965 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:49.149 conn=0x040 -> WRITE_CMD h=0x0006 raw=5a2097e40890b857a99a6b5f53668285
+                                 dec=0f 53 47 4c 53 00 00 64 50 02 00 00 02 00 00 32  |.SGLS..dP......2|
+07:10:49.174 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:10:49.521 conn=0x040 -> WRITE_CMD h=0x0006 raw=5a2097e40890b857a99a6b5f53668285
+                                 dec=0f 53 47 4c 53 00 00 64 50 02 00 00 02 00 00 32  |.SGLS..dP......2|
+07:10:49.549 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:08.510 conn=0x040 -> WRITE_CMD h=0x0006 raw=d50452b2479f0c3482df1a7fae6fb13a
+                                 dec=0f 53 47 4c 53 00 00 64 50 07 00 00 07 00 00 32  |.SGLS..dP......2|
+07:11:08.540 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:08.729 conn=0x040 -> WRITE_CMD h=0x0006 raw=ee386864c705981e460a3babaeca8944
+                                 dec=0f 53 47 4c 53 00 00 64 50 7f 00 00 7f 00 00 32  |.SGLS..dP......2|
+07:11:08.750 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:09.042 conn=0x040 -> WRITE_CMD h=0x0006 raw=565678fb16df7108954c628cd6cbfc9d
+                                 dec=0f 53 47 4c 53 00 00 64 50 89 00 00 89 00 00 32  |.SGLS..dP......2|
+07:11:09.065 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:09.293 conn=0x040 -> WRITE_CMD h=0x0006 raw=c7ec007b3ae9ceb67ceeedd5a12cdb3d
+                                 dec=0f 53 47 4c 53 00 00 64 50 84 00 00 84 00 00 32  |.SGLS..dP......2|
+07:11:09.321 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:09.721 conn=0x040 -> WRITE_CMD h=0x0006 raw=b2e7da2d58d20f9e6b833acb7087de73
+                                 dec=0f 53 47 4c 53 00 00 64 50 82 00 00 82 00 00 32  |.SGLS..dP......2|
+07:11:09.755 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:19.413 conn=0x040 -> WRITE_CMD h=0x0006 raw=364d5fe8fbd53ee620f035862deb3d91
+                                 dec=0f 53 47 4c 53 00 00 64 50 93 00 00 93 00 00 32  |.SGLS..dP......2|
+07:11:19.446 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
+07:11:19.569 conn=0x040 -> WRITE_CMD h=0x0006 raw=73baa3e311ef375b0c2965911e7f5357
+                                 dec=0f 53 47 4c 53 00 00 64 50 ff 00 00 ff 00 00 32  |.SGLS..dP......2|
+07:11:19.596 conn=0x040 <- NOTIFY    h=0x000d raw=9377d9a5ce41387fbfc001984adabf47
+                                 dec=06 53 47 4c 53 4f 4b 00 06 4d 55 4c 54 4f 4b 00  |.SGLSOK..MULTOK.|
