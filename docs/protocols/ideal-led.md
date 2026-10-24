@@ -282,10 +282,12 @@ counts above 400 (`ideal::MAX_LEDS`).
 
 1. Phone: Developer options → **Enable Bluetooth HCI snoop log → Enabled** (not Filtered), then
    toggle Bluetooth off and on.
-2. Perform one action at a time in the vendor app, noting the order.
-3. `adb bugreport bug.zip`, then
-   `unzip -j bug.zip FS/data/misc/bluetooth/logs/btsnoop_hci.log`.
-4. `python3 -I tools/parse_snoop.py btsnoop_hci.log` (needs `cryptography`).
+2. `tools/capture.sh check` confirms the phone is on adb and the log mode is `full`.
+3. Perform one action at a time in the vendor app, noting the order.
+4. `tools/capture.sh pull <name>` collects the bug report, keeps the raw log in the git-ignored
+   `research/captures/`, and writes the decoded dump to `docs/captures/<date>-<name>.txt`
+   (needs `cryptography`). It lists packets per connection; drop other devices' lines before
+   committing.
 5. Turn the snoop log off afterwards.
 
 Don't commit raw `btsnoop_hci.log` files: they hold every device on the phone. Commit the
