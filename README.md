@@ -88,12 +88,18 @@ clients run one at a time in arrival order, so send DIY pixels sequentially to k
 
 ## Android
 
-The desktop app also builds for Android. Bluetooth does not work there yet: btleplug needs an
-Android backend.
+The app builds for Android 8.0 (API 26) and later, with Bluetooth through
+[blec](https://github.com/MnlPhlp/tauri-plugin-blec) instead of btleplug. It has the desktop
+app's commands except light info, which fails: the model string is a GATT descriptor, and blec
+cannot read descriptors on Android. Not yet tried against a light.
+
+The first scan asks for the Nearby devices permission (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`). If
+it was denied before, scanning opens the app's settings page instead; allow Nearby devices there.
 
 ```sh
 source tools/android-env.sh   # Android SDK and NDK in ~/Library/Android/sdk, JDK 17
 cd crates/glowmote-app && cargo tauri android build --debug --apk --target aarch64
+adb install -r gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
 
 ## Layout
@@ -101,7 +107,7 @@ cd crates/glowmote-app && cargo tauri android build --debug --apk --target aarch
 | Path | Contents |
 |---|---|
 | `crates/glowmote-core` | Protocol encoders, pure bytes, no I/O. Tests use captured packets. |
-| `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug): scanning and a connection that stays open across commands. |
+| `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug), or blec on Android: scanning and a connection that stays open across commands. |
 | `crates/glowmote-control` | `Controller`: the shared light connection and the command set the app and proxy expose. |
 | `crates/glowmote-app` | Tauri 2 desktop app; the UI is plain HTML/JS in `ui/`, no npm. |
 | `crates/glowmote-proxy` | `glowmote-proxy` binary: the commands over HTTP, plus the app's UI for browsers. |
