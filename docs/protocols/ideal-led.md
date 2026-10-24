@@ -158,8 +158,8 @@ Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. 
 
 1. Enable notifications: write `0100` to `0x000e` (control) and `0x0085` (OTA).
 2. Read the version characteristic → `TR2411R003-07`.
-3. JieLi OTA auth handshake on `ae01`/`ae02` (random challenge, then response). Not needed for
-   control commands: glowmote drove `ISP-50542B` without it on 2026-10-24.
+3. JieLi OTA auth handshake on `ae01`/`ae02` (see [OTA service](#ota-service-ae00)). Not needed
+   for control commands: glowmote drove `ISP-50542B` without it on 2026-10-24.
 4. On a fresh app start, also on `0x0006`:
    - `15 'TIME' <weekday> <h> <m> <s> a5 5a a5 01 <app version digits>`, e.g.
      `06 08 04 26 … 03 01 07` for Saturday 08:04:38 from app 3.1.7. No ack.
@@ -186,6 +186,28 @@ Do not send these until a capture confirms the exact bytes.
 | `SHVEW` | enter DIY mode | `Agreement.getEnterDiyCommand` |
 | `DOOT`, `DOOTCP` | bulk DIY upload | `BleProtocol.graffiti(List)`, `sendDootCp` |
 | `DEN 01` | enter DIY, variant | `enterDiyMode1` |
+
+## OTA service (`ae00`)
+
+The `ae00` service is the stock JieLi SDK's RCSP OTA channel (`apps/spp_and_le` in
+[fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK)). Before it accepts update commands,
+both sides authenticate with Bluetooth Classic's E1 (SAFER+) function, keyed with the SDK's
+default link key and address, which the vendor left unchanged:
+
+- link key `06775f87918dd423005df1d8cf0c142b`, address `112233332211`
+- `00 <16-byte challenge>` → `01 <E1(key, challenge, address)>`; `02 'pass'` confirms.
+
+| Step | Direction | Bytes |
+|---|---|---|
+| 1 | app → light (`ae01`) | `00 67c6697351ff4aec29cdbaabf2fbe346` |
+| 2 | light → app (`ae02`) | `01 023a02126fa284879236e9da27ba0b8d` |
+| 3 | app → light | `02 'pass'` |
+| 4 | light → app | `00 f14f07aeaa049fb1e314ff67c629fecf` |
+| 5 | app → light | `01 367094e00eb997eaccfbee8d295e3f4f` |
+| 6 | light → app | `02 'pass'` |
+
+Both responses were reproduced with E1 and the key above. Passing the handshake only opens the
+OTA channel; the on-chip loader still checks the chip model, CRCs and the image encryption key.
 
 ## Firmware
 
