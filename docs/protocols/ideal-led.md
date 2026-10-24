@@ -13,7 +13,8 @@ Covers BLE controllers that advertise as `ISP-*` or `IDL-*` and pair with the An
 | Field | Value |
 |---|---|
 | Advertised name | `ISP-50542B` |
-| Firmware (version characteristic) | `TR2411R003-07` |
+| Model string (handle `0x0007`) | `TR2411R003-07` |
+| Firmware versions (`VE 00` / `VE 01`) | `V024.11.03.7` / `V124.11.66.1` |
 | Vendor app | `com.winkison.ledlight` 3.1.7 (versionCode 317) |
 | Chip | JieLi (OTA via `ae00` service, `libjl_ota_auth.so`) |
 
