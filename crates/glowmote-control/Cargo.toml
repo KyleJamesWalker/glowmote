@@ -8,6 +8,7 @@ license.workspace = true
 anyhow = "1.0.104"
 glowmote-ble = { path = "../glowmote-ble" }
 glowmote-core = { path = "../glowmote-core" }
+serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2.0.21"
 tokio = { version = "1.54.1", features = ["sync"] }
 

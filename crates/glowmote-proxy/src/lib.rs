@@ -41,6 +41,7 @@ pub fn router<R: Radio>(controller: Arc<Controller<R>>) -> Router {
         .route("/api/scan_lights", post(scan_lights::<R>))
         .route("/api/connect", post(connect::<R>))
         .route("/api/disconnect", post(disconnect::<R>))
+        .route("/api/info", post(info::<R>))
         .route("/api/power", post(power::<R>))
         .route("/api/color", post(color::<R>))
         .route("/api/scene", post(scene::<R>))
@@ -153,6 +154,10 @@ async fn connect<R: Radio>(State(c): Ctl<R>, Args(a): Args<Name>) -> Reply {
 
 async fn disconnect<R: Radio>(State(c): Ctl<R>, _: Args<NoArgs>) -> Reply {
     reply(c.disconnect().await)
+}
+
+async fn info<R: Radio>(State(c): Ctl<R>, _: Args<NoArgs>) -> Reply {
+    reply(c.info().await)
 }
 
 async fn power<R: Radio>(State(c): Ctl<R>, Args(a): Args<On>) -> Reply {
@@ -276,6 +281,10 @@ mod tests {
 
         async fn disconnect(self) -> anyhow::Result<()> {
             Ok(())
+        }
+
+        async fn info(&mut self) -> anyhow::Result<glowmote_control::LightInfo> {
+            anyhow::bail!("radio off")
         }
     }
 

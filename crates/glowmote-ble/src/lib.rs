@@ -121,7 +121,7 @@ impl Light {
     }
 
     /// The model string, e.g. `TR2411R003-07`, from the write characteristic's user description.
-    pub async fn read_model(&self) -> Result<String> {
+    pub async fn read_model(&mut self) -> Result<String> {
         let description = Uuid::from_u128(0x0000_2901_0000_1000_8000_0080_5f9b_34fb);
         let descriptor = self
             .write

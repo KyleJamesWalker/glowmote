@@ -66,6 +66,15 @@ pub trait Link: Send + 'static {
         frame: &[u8],
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
     fn disconnect(self) -> impl Future<Output = anyhow::Result<()>> + Send;
+    fn info(&mut self) -> impl Future<Output = anyhow::Result<LightInfo>> + Send;
+}
+
+/// What a light reports about itself: the model string and the two `VE` firmware versions.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct LightInfo {
+    pub name: String,
+    pub model: String,
+    pub firmware: [Option<String>; 2],
 }
 
 pub struct Ble;
@@ -106,6 +115,14 @@ impl Link for Light {
 
     async fn disconnect(self) -> anyhow::Result<()> {
         Light::disconnect(self).await
+    }
+
+    async fn info(&mut self) -> anyhow::Result<LightInfo> {
+        Ok(LightInfo {
+            name: self.name.clone(),
+            model: self.read_model().await?,
+            firmware: self.versions().await?,
+        })
     }
 }
 
@@ -192,6 +209,12 @@ impl<R: Radio> Controller<R> {
             light.disconnect().await?;
         }
         Ok(())
+    }
+
+    pub async fn info(&self) -> Result<LightInfo> {
+        let mut slot = self.light.lock().await;
+        let light = slot.as_mut().ok_or(Error::NotConnected)?;
+        Ok(light.info().await?)
     }
 
     pub async fn power(&self, on: bool) -> Result<String> {
@@ -332,6 +355,14 @@ mod tests {
         async fn disconnect(self) -> anyhow::Result<()> {
             Ok(())
         }
+
+        async fn info(&mut self) -> anyhow::Result<LightInfo> {
+            Ok(LightInfo {
+                name: self.name.clone(),
+                model: "TR0000R000-00".into(),
+                firmware: [Some("V0".into()), None],
+            })
+        }
     }
 
     fn controller(names: Vec<&'static str>) -> (Controller<FakeRadio>, Log) {
@@ -346,6 +377,7 @@ mod tests {
     #[tokio::test]
     async fn commands_need_a_connection() {
         let (c, _) = controller(vec![]);
+        assert!(matches!(c.info().await, Err(Error::NotConnected)));
         assert!(matches!(c.power(true).await, Err(Error::NotConnected)));
         assert!(matches!(c.diy(true).await, Err(Error::NotConnected)));
     }

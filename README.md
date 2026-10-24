@@ -74,6 +74,7 @@ failed or did not acknowledge.
 | `POST /api/scan_lights` | `{}` | light names |
 | `POST /api/connect` | `{"name"}` | `null` |
 | `POST /api/disconnect` | `{}` | `null` |
+| `POST /api/info` | `{}` | `{"name", "model", "firmware": [v0, v1]}` |
 | `POST /api/power` | `{"on"}` | acknowledged tag |
 | `POST /api/color` | `{"rgb", "brightness"}` | acknowledged tag |
 | `POST /api/scene` | `{"first", "second", "speed", "brightness", "reverse"}` | `null` |
