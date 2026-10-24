@@ -600,6 +600,86 @@ pub fn clock(
     Ok(p)
 }
 
+/// One daily timer. `days` has bit 0 for Monday through bit 6 for Sunday; 0 fires once, at the
+/// next occurrence by the light's [`clock`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Timer {
+    pub hour: u8,
+    pub minute: u8,
+    pub days: u8,
+}
+
+/// Sets both power timers (`SCHD`); `None` disables one. Acknowledged with `SCHDOK`.
+pub fn timers(on: Option<Timer>, off: Option<Timer>) -> Result<Packet, OutOfRange> {
+    let mut args = [0u8; 8];
+    for (slot, timer) in args.chunks_mut(4).zip([on, off]) {
+        if let Some(Timer { hour, minute, days }) = timer {
+            check("hour", hour, 0, 23)?;
+            check("minute", minute, 0, 59)?;
+            check("days", days, 0, 0x7f)?;
+            slot.copy_from_slice(&[1, days, hour, minute]);
+        }
+    }
+    Ok(tagged(b"SCHD", &args))
+}
+
+// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
+#[cfg(test)]
+mod predicted_timers {
+    use super::*;
+    use hex_literal::hex;
+
+    const WEEKDAYS: u8 = 0b001_1111;
+
+    #[test]
+    fn timers_match_prediction() {
+        assert_eq!(
+            encrypt(&timers(None, None).unwrap()),
+            hex!("295e35acf7ddc93744c6fe93746bdece")
+        );
+        let on = Timer {
+            hour: 7,
+            minute: 30,
+            days: WEEKDAYS,
+        };
+        assert_eq!(
+            encrypt(&timers(Some(on), None).unwrap()),
+            hex!("4c75ab6068f1332cee459a1d6d7e2bbc")
+        );
+        let ack = decrypt(&hex!("761610f8ae440c3f82023e61cdb75339"));
+        assert_eq!(parse_ack(&ack), Some("SCHD"));
+    }
+
+    #[test]
+    fn off_timer_fills_the_second_half() {
+        let off = Timer {
+            hour: 23,
+            minute: 5,
+            days: 0,
+        };
+        let p = timers(None, Some(off)).unwrap();
+        assert_eq!(&p[..16], &hex!("0c534348440000000001001705000000"));
+    }
+
+    #[test]
+    fn timers_reject_impossible_times() {
+        let ok = Timer {
+            hour: 23,
+            minute: 59,
+            days: 0x7f,
+        };
+        assert!(timers(Some(ok), Some(ok)).is_ok());
+        for bad in [
+            Timer { hour: 24, ..ok },
+            Timer { minute: 60, ..ok },
+            Timer { days: 0x80, ..ok },
+        ] {
+            assert!(timers(Some(bad), None).is_err());
+            assert!(timers(None, Some(bad)).is_err());
+        }
+    }
+}
+
 /// Asks for one of the two firmware version strings (`VE 00` and `VE 01`); see [`parse_version`].
 pub fn version_query(second: bool) -> Packet {
     tagged(b"VE", &[second as u8])
