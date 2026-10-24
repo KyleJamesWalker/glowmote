@@ -33,6 +33,35 @@ pub const MAX_LEDS: u16 = 400;
 #[error("{0} is beyond the firmware's {MAX_LEDS}-LED buffer")]
 pub struct LedOutOfRange(pub u16);
 
+/// A field outside the range the firmware handles safely.
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+#[error("{field} {value} is outside {min}..={max}")]
+pub struct OutOfRange {
+    pub field: &'static str,
+    pub value: u16,
+    pub min: u16,
+    pub max: u16,
+}
+
+fn check<T: Into<u16> + Copy>(
+    field: &'static str,
+    value: T,
+    min: u16,
+    max: u16,
+) -> Result<T, OutOfRange> {
+    let v = value.into();
+    if (min..=max).contains(&v) {
+        Ok(value)
+    } else {
+        Err(OutOfRange {
+            field,
+            value: v,
+            min,
+            max,
+        })
+    }
+}
+
 pub fn is_ideal_name(name: &str) -> bool {
     NAME_PREFIXES.iter().any(|p| name.starts_with(p))
 }
@@ -161,6 +190,34 @@ fn scale(c: Rgb, pct: u8) -> Rgb {
         }
     };
     Rgb::new(ch(c.r), ch(c.g), ch(c.b))
+}
+
+/// Sets the light's clock (`TIME`), as the app does on connecting; timers fire against it.
+/// `weekday` is 1 (Monday) to 7 (Sunday); `app_version` is the vendor app's version digits,
+/// e.g. `[3, 1, 7]`. Not acknowledged.
+pub fn clock(
+    weekday: u8,
+    hour: u8,
+    minute: u8,
+    second: u8,
+    app_version: [u8; 3],
+) -> Result<Packet, OutOfRange> {
+    check("weekday", weekday, 1, 7)?;
+    check("hour", hour, 0, 23)?;
+    check("minute", minute, 0, 59)?;
+    check("second", second, 0, 59)?;
+    for digit in app_version {
+        check("app version digit", digit, 0, 9)?;
+    }
+    let [a, b, c] = app_version;
+    let mut p = tagged(
+        b"TIME",
+        &[
+            weekday, hour, minute, second, 0xa5, 0x5a, 0xa5, 0x01, a, b, c,
+        ],
+    );
+    p[0] = 0x15; // the app sends 0x15, not the packet length
+    Ok(p)
 }
 
 /// Asks for one of the two firmware version strings (`VE 00` and `VE 01`); see [`parse_version`].
@@ -329,6 +386,25 @@ mod tests {
             encrypt(&version_query(true)),
             hex!("d12e61ad95a00bd3c56bee6f9cb545fe")
         );
+    }
+
+    #[test]
+    fn clock_matches_capture() {
+        assert_eq!(
+            encrypt(&clock(6, 8, 4, 38, [3, 1, 7]).unwrap()),
+            hex!("b7f8ad85115c2ad8d8a7692cae99270e")
+        );
+    }
+
+    #[test]
+    fn clock_rejects_impossible_times() {
+        assert!(clock(7, 23, 59, 59, [9, 9, 9]).is_ok());
+        assert!(clock(0, 8, 4, 38, [3, 1, 7]).is_err());
+        assert!(clock(8, 8, 4, 38, [3, 1, 7]).is_err());
+        assert!(clock(6, 24, 4, 38, [3, 1, 7]).is_err());
+        assert!(clock(6, 8, 60, 38, [3, 1, 7]).is_err());
+        assert!(clock(6, 8, 4, 60, [3, 1, 7]).is_err());
+        assert!(clock(6, 8, 4, 38, [3, 10, 7]).is_err());
     }
 
     #[test]
