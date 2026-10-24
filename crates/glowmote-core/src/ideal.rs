@@ -11,7 +11,6 @@ use crate::Rgb;
 pub const SERVICE_UUID: &str = "0000fff0-0000-1000-8000-00805f9b34fb";
 pub const WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129600";
 pub const NOTIFY_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129601";
-pub const VERSION_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129602";
 /// Takes plaintext data frames, such as scene colors.
 pub const BULK_WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-92541612960a";
 

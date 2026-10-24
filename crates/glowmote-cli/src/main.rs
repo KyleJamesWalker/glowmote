@@ -27,6 +27,8 @@ struct Cli {
 enum Command {
     /// List supported lights in range
     Scan,
+    /// Show the light's model and firmware versions
+    Info,
     /// Connect once and read commands from stdin, one per line
     Shell,
     /// Step slowly through connect, subscribe, send `on`, disconnect, to see which step blinks
@@ -195,6 +197,7 @@ async fn main() -> Result<()> {
     let name = light.name.clone();
     match cli.command {
         Command::Scan => unreachable!(),
+        Command::Info => info(light).await,
         Command::Shell => shell(light).await,
         Command::Probe { pause_secs } => probe(light, Duration::from_secs(pause_secs)).await,
         Command::Action(action) => {
@@ -204,6 +207,17 @@ async fn main() -> Result<()> {
         }
     }
     .with_context(|| format!("talking to {name}"))
+}
+
+async fn info(found: Found) -> Result<()> {
+    let mut light = Light::connect(found).await?;
+    println!("name:     {}", light.name);
+    println!("model:    {}", light.read_model().await?);
+    let [first, second] = light.versions().await?;
+    let show = |v: Option<String>| v.unwrap_or_else(|| "no reply".into());
+    println!("firmware: {}", show(first));
+    println!("          {}", show(second));
+    light.disconnect().await
 }
 
 async fn shell(found: Found) -> Result<()> {

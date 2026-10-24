@@ -23,11 +23,14 @@ Covers BLE controllers that advertise as `ISP-*` or `IDL-*` and pair with the An
 |---|---|---|
 | Control service | `0000fff0-0000-1000-8000-00805f9b34fb` | |
 | Write (commands, write without response) | `d44bc439-abfd-45a2-b575-925416129600` | `0x0006` |
+| Model string (user description `2901` on `…9600`), e.g. `TR2411R003-07` | | `0x0007` |
 | Notify (acks) | `d44bc439-abfd-45a2-b575-925416129601` | `0x000d`, CCCD `0x000e` |
-| Read (firmware version) | `d44bc439-abfd-45a2-b575-925416129602` | `0x0007` |
 | Bulk write (plaintext frames, see `MULT`) | `d44bc439-abfd-45a2-b575-92541612960a` | `0x0009` |
 | Extra write channel | `…960b` | |
+| Unknown service / write / write+notify | `0000fd00` / `0000fd01` / `0000fd02` | |
 | OTA service / write / notify | `0000ae00` / `0000ae01` / `0000ae02` | `0x0082` / `0x0084`, CCCD `0x0085` |
+
+The vendor app references a `…9602` read characteristic, but `ISP-50542B` does not expose one.
 
 The app also references `0000fee9` as an alternative service UUID for other product lines.
 
@@ -157,7 +160,7 @@ Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. 
 ## Connection sequence (vendor app)
 
 1. Enable notifications: write `0100` to `0x000e` (control) and `0x0085` (OTA).
-2. Read the version characteristic → `TR2411R003-07`.
+2. Read handle `0x0007`, the user description on `…9600` → `TR2411R003-07`.
 3. JieLi OTA auth handshake on `ae01`/`ae02` (see [OTA service](#ota-service-ae00)). Not needed
    for control commands: glowmote drove `ISP-50542B` without it on 2026-10-24.
 4. On a fresh app start, also on `0x0006`:

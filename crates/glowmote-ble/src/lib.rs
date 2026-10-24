@@ -120,20 +120,58 @@ impl Light {
         Ok(self.wait_ack("MULTCP").await.is_some())
     }
 
+    /// The model string, e.g. `TR2411R003-07`, from the write characteristic's user description.
+    pub async fn read_model(&self) -> Result<String> {
+        let description = Uuid::from_u128(0x0000_2901_0000_1000_8000_0080_5f9b_34fb);
+        let descriptor = self
+            .write
+            .descriptors
+            .iter()
+            .find(|d| d.uuid == description)
+            .context("no user description on the write characteristic")?;
+        let raw = self.peripheral.read_descriptor(descriptor).await?;
+        Ok(String::from_utf8_lossy(&raw)
+            .trim_end_matches('\0')
+            .to_owned())
+    }
+
+    /// The two `VE` version strings, `None` for any the light did not answer.
+    pub async fn versions(&mut self) -> Result<[Option<String>; 2]> {
+        let mut out = [None, None];
+        for (slot, second) in out.iter_mut().zip([false, true]) {
+            self.send_unacked(&ideal::version_query(second)).await?;
+            *slot = self
+                .wait_for(|plain| ideal::parse_version(plain).map(str::to_owned))
+                .await;
+        }
+        Ok(out)
+    }
+
     async fn wait_ack(&mut self, tag: &str) -> Option<String> {
-        let ack = tokio::time::timeout(ACK_TIMEOUT, async {
+        self.wait_for(|plain| {
+            ideal::parse_ack(plain)
+                .filter(|acked| *acked == tag)
+                .map(str::to_owned)
+        })
+        .await
+    }
+
+    async fn wait_for<T>(
+        &mut self,
+        mut matches: impl FnMut(&ideal::Packet) -> Option<T>,
+    ) -> Option<T> {
+        let found = tokio::time::timeout(ACK_TIMEOUT, async {
             while let Some(n) = self.notifications.next().await {
                 if let Ok(block) = <ideal::Packet>::try_from(n.value.as_slice())
-                    && let Some(acked) = ideal::parse_ack(&ideal::decrypt(&block))
-                    && acked == tag
+                    && let Some(value) = matches(&ideal::decrypt(&block))
                 {
-                    return Some(acked.to_owned());
+                    return Some(value);
                 }
             }
             None
         })
         .await;
-        ack.ok().flatten()
+        found.ok().flatten()
     }
 
     /// Sends a packet the light never acknowledges, such as `DEN` or `DSTOP`.
