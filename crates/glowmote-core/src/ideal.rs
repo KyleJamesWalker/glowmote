@@ -73,9 +73,10 @@ pub fn diy_enter() -> Packet {
     tagged(b"DEN", &[0])
 }
 
-/// Leaves the DIY editor. The app sends `unsaved = true` when the drawing has not been saved.
-pub fn diy_exit(unsaved: bool) -> Packet {
-    let mut p = tagged(b"DSTOP", &[unsaved as u8]);
+/// Leaves DIY mode: `keep_drawing` leaves the drawing showing (`DSTOP 01`), otherwise the lights
+/// return to their previous mode and the drawing is discarded (`DSTOP 00`).
+pub fn diy_exit(keep_drawing: bool) -> Packet {
+    let mut p = tagged(b"DSTOP", &[keep_drawing as u8]);
     p[0] = 5; // the length byte excludes the argument
     p
 }

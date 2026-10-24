@@ -56,8 +56,8 @@ async fn scene(
 }
 
 #[tauri::command]
-async fn diy(c: Ctl<'_>, on: bool) -> CmdResult<()> {
-    Ok(c.diy(on).await?)
+async fn diy(c: Ctl<'_>, on: bool, keep: Option<bool>) -> CmdResult<()> {
+    Ok(c.diy(on, keep.unwrap_or(false)).await?)
 }
 
 #[tauri::command]

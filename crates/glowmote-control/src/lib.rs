@@ -246,11 +246,12 @@ impl<R: Radio> Controller<R> {
         }
     }
 
-    pub async fn diy(&self, on: bool) -> Result<()> {
+    /// Enters or leaves DIY mode; `keep_drawing` only matters when leaving.
+    pub async fn diy(&self, on: bool, keep_drawing: bool) -> Result<()> {
         let packet = if on {
             ideal::diy_enter()
         } else {
-            ideal::diy_exit(false)
+            ideal::diy_exit(keep_drawing)
         };
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
@@ -379,7 +380,7 @@ mod tests {
         let (c, _) = controller(vec![]);
         assert!(matches!(c.info().await, Err(Error::NotConnected)));
         assert!(matches!(c.power(true).await, Err(Error::NotConnected)));
-        assert!(matches!(c.diy(true).await, Err(Error::NotConnected)));
+        assert!(matches!(c.diy(true, false).await, Err(Error::NotConnected)));
     }
 
     #[tokio::test]
@@ -413,7 +414,7 @@ mod tests {
         c.connect_matching(None).await.unwrap();
         c.power(true).await.unwrap();
         c.color("#ff0000", 250).await.unwrap();
-        c.diy(true).await.unwrap();
+        c.diy(true, false).await.unwrap();
         c.diy_pixel(3, 180, "00ff00", 50).await.unwrap();
         let red = Rgb::new(0xff, 0, 0);
         assert_eq!(

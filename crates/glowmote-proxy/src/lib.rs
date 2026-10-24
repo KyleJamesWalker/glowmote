@@ -111,6 +111,13 @@ struct On {
 }
 
 #[derive(Deserialize)]
+struct Diy {
+    on: bool,
+    #[serde(default)]
+    keep: bool,
+}
+
+#[derive(Deserialize)]
 struct Color {
     rgb: String,
     brightness: u8,
@@ -180,8 +187,8 @@ async fn scene<R: Radio>(State(c): Ctl<R>, Args(a): Args<Scene>) -> Reply {
     )
 }
 
-async fn diy<R: Radio>(State(c): Ctl<R>, Args(a): Args<On>) -> Reply {
-    reply(c.diy(a.on).await)
+async fn diy<R: Radio>(State(c): Ctl<R>, Args(a): Args<Diy>) -> Reply {
+    reply(c.diy(a.on, a.keep).await)
 }
 
 async fn diy_pixel<R: Radio>(State(c): Ctl<R>, Args(a): Args<Pixel>) -> Reply {

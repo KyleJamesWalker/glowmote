@@ -78,7 +78,7 @@ failed or did not acknowledge.
 | `POST /api/power` | `{"on"}` | acknowledged tag |
 | `POST /api/color` | `{"rgb", "brightness"}` | acknowledged tag |
 | `POST /api/scene` | `{"first", "second", "speed", "brightness", "reverse"}` | `null` |
-| `POST /api/diy` | `{"on"}` | `null` |
+| `POST /api/diy` | `{"on", "keep"}` (`keep` optional: leave the drawing showing) | `null` |
 | `POST /api/diy_pixel` | `{"index", "leds", "rgb", "brightness"}` | acknowledged tag |
 | `POST /api/diy_fill` | `{"leds", "rgb", "brightness"}` | acknowledged tag |
 

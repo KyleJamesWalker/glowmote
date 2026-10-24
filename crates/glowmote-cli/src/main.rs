@@ -73,9 +73,9 @@ enum Action {
     Diy,
     /// Leave DIY mode
     DiyExit {
-        /// Send the variant the app uses when the drawing is unsaved
+        /// Leave the drawing showing instead of returning to the previous mode
         #[arg(long)]
-        unsaved: bool,
+        keep: bool,
     },
     /// Set one LED (DIY mode)
     Pixel {
@@ -131,9 +131,9 @@ impl Action {
                     .await
                     .map(|()| println!("sent"));
             }
-            Action::DiyExit { unsaved } => {
+            Action::DiyExit { keep } => {
                 return light
-                    .send_unacked(&ideal::diy_exit(unsaved))
+                    .send_unacked(&ideal::diy_exit(keep))
                     .await
                     .map(|()| println!("sent"));
             }
