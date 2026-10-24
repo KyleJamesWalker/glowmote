@@ -18,6 +18,7 @@ const ACK_TIMEOUT: Duration = Duration::from_secs(2);
 /// The vendor app never sends commands closer together than this.
 const MIN_SEND_INTERVAL: Duration = Duration::from_millis(50);
 
+#[derive(Clone)]
 pub struct Found {
     pub name: String,
     pub peripheral: Peripheral,

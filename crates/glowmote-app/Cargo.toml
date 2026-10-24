@@ -1,0 +1,15 @@
+[package]
+name = "glowmote-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+glowmote-ble = { path = "../glowmote-ble" }
+glowmote-core = { path = "../glowmote-core" }
+tauri = "2.12.5"
+tokio = { version = "1.54.1", features = ["sync"] }
+
+[build-dependencies]
+tauri-build = "2.7.4"

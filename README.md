@@ -27,12 +27,25 @@ printf 'on\ncolor 00ff00\nquit\n' | cargo run -p glowmote -- shell
 
 On macOS the first run asks for Bluetooth permission for your terminal.
 
+## Desktop app
+
+A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color and brightness. It holds
+one connection while open.
+
+```sh
+cargo run -p glowmote-app
+```
+
+For a bundled app, install the CLI (`cargo install tauri-cli --version "^2" --locked`) and run
+`cargo tauri build` in `crates/glowmote-app`.
+
 ## Layout
 
 | Path | Contents |
 |---|---|
 | `crates/glowmote-core` | Protocol encoders, pure bytes, no I/O. Tests use captured packets. |
 | `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug): scanning and a connection that stays open across commands. |
+| `crates/glowmote-app` | Tauri 2 desktop app; the UI is plain HTML/JS in `ui/`, no npm. |
 | `crates/glowmote-cli` | `glowmote` binary: one-shot commands, `shell` and `probe`. |
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
 | `docs/captures/` | Decoded vendor-app captures backing the confirmed commands. |

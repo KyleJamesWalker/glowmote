@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>glowmote</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>glowmote</h1>
+      <p id="status" role="status">Not connected</p>
+    </header>
+
+    <section aria-labelledby="lights-heading">
+      <div class="row">
+        <h2 id="lights-heading">Lights</h2>
+        <button id="scan" type="button">Scan</button>
+      </div>
+      <ul id="devices"></ul>
+    </section>
+
+    <section id="controls" aria-labelledby="controls-heading" inert>
+      <h2 id="controls-heading">Controls</h2>
+      <div class="row power">
+        <button id="on" type="button">On</button>
+        <button id="off" type="button">Off</button>
+      </div>
+
+      <label for="color">Color</label>
+      <div class="row">
+        <input id="color" type="color" value="#ff0000">
+        <div class="swatches">
+          <button type="button" data-color="#ff0000" aria-label="Red"></button>
+          <button type="button" data-color="#00ff00" aria-label="Green"></button>
+          <button type="button" data-color="#0000ff" aria-label="Blue"></button>
+          <button type="button" data-color="#ffffff" aria-label="White"></button>
+        </div>
+      </div>
+
+      <label for="brightness">Brightness <output id="brightness-value">100%</output></label>
+      <input id="brightness" type="range" min="1" max="100" value="100">
+    </section>
+  </main>
+</body>
+</html>

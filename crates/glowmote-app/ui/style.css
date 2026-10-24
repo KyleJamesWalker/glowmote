@@ -1,0 +1,94 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f6f8;
+  --panel: #ffffff;
+  --text: #1c1c22;
+  --muted: #6b6b76;
+  --border: #dcdce2;
+  --accent: #5b4bdb;
+  --accent-text: #ffffff;
+  --error: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15151a;
+    --panel: #1f1f26;
+    --text: #ececf1;
+    --muted: #9a9aa6;
+    --border: #33333d;
+    --accent: #8b7dff;
+    --accent-text: #15151a;
+    --error: #ff7a7a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+h1 { margin: 0; font-size: 22px; }
+h2 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+#status { margin: 4px 0 0; color: var(--muted); min-height: 1.4em; }
+#status.error { color: var(--error); }
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+section[inert] { opacity: .45; }
+
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: progress; }
+.power button { flex: 1; }
+.power #on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+#devices { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#devices:empty::before { content: "Press Scan to find lights."; color: var(--muted); }
+#devices button { width: 100%; text-align: left; }
+#devices button[aria-current="true"] { border-color: var(--accent); font-weight: 600; }
+
+label { display: flex; justify-content: space-between; color: var(--muted); }
+
+input[type="color"] {
+  width: 56px; height: 40px; padding: 0;
+  border: 1px solid var(--border); border-radius: 8px; background: none;
+}
+
+.swatches { display: flex; gap: 8px; }
+.swatches button {
+  width: 32px; height: 32px; padding: 0; border-radius: 50%;
+  background: var(--c);
+}
+
+input[type="range"] { width: 100%; accent-color: var(--accent); }
