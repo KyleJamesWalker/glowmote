@@ -279,7 +279,7 @@ const queueDiy = (command, args) => {
   return diyQueue;
 };
 const diyBrightness = () => Number($("diy-brightness").value);
-const ledCount = () => Math.max(1, Math.min(1024, Number($("leds").value) || 180));
+const ledCount = () => Math.max(1, Math.min(400, Number($("leds").value) || 180));
 const splitAt = () => Math.min(ledCount() - 1, Math.max(0, Number($("split").value)));
 
 let hiddenArms = [];

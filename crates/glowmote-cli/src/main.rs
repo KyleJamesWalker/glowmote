@@ -85,7 +85,7 @@ enum Action {
         #[arg(short, long, default_value_t = 50, value_parser = clap::value_parser!(u8).range(0..=100))]
         brightness: u8,
         /// LEDs on the strip
-        #[arg(long, default_value_t = 180)]
+        #[arg(long, default_value_t = 180, value_parser = clap::value_parser!(u16).range(1..=ideal::MAX_LEDS as i64))]
         leds: u16,
     },
     /// Set every LED (DIY mode)
@@ -96,7 +96,7 @@ enum Action {
         #[arg(short, long, default_value_t = 50, value_parser = clap::value_parser!(u8).range(0..=100))]
         brightness: u8,
         /// LEDs on the strip
-        #[arg(long, default_value_t = 180)]
+        #[arg(long, default_value_t = 180, value_parser = clap::value_parser!(u16).range(1..=ideal::MAX_LEDS as i64))]
         leds: u16,
     },
 }
@@ -144,13 +144,13 @@ impl Action {
                 if index >= leds {
                     bail!("index {index} is past the last LED ({})", leds - 1);
                 }
-                ideal::diy_pixel(index, rgb, brightness)
+                ideal::diy_pixel(index, rgb, brightness)?
             }
             Action::Fill {
                 rgb,
                 brightness,
                 leds,
-            } => ideal::diy_fill(leds, rgb, brightness),
+            } => ideal::diy_fill(leds, rgb, brightness)?,
         };
         match light.send(&packet).await? {
             Some(tag) => println!("ok ({tag})"),

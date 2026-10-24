@@ -110,7 +110,8 @@ async fn diy_pixel(
         return Err(format!("index {index} is past the last LED"));
     }
     let rgb: Rgb = rgb.parse().map_err(|e| format!("{e}"))?;
-    send(&app, ideal::diy_pixel(index, rgb, brightness)).await
+    let packet = ideal::diy_pixel(index, rgb, brightness).map_err(|e| e.to_string())?;
+    send(&app, packet).await
 }
 
 #[tauri::command]
@@ -121,7 +122,8 @@ async fn diy_fill(
     brightness: u8,
 ) -> CmdResult<String> {
     let rgb: Rgb = rgb.parse().map_err(|e| format!("{e}"))?;
-    send(&app, ideal::diy_fill(leds, rgb, brightness)).await
+    let packet = ideal::diy_fill(leds, rgb, brightness).map_err(|e| e.to_string())?;
+    send(&app, packet).await
 }
 
 async fn send(app: &App, packet: ideal::Packet) -> CmdResult<String> {

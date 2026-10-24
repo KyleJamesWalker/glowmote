@@ -26,6 +26,14 @@ const MIN_LIT_CHANNEL: u8 = 2;
 
 pub type Packet = [u8; 16];
 
+/// Size of the firmware's per-channel pixel buffers. `DOOD` indexes them without a bounds check,
+/// so a larger index or LED count corrupts the controller's RAM.
+pub const MAX_LEDS: u16 = 400;
+
+#[derive(Debug, thiserror::Error)]
+#[error("{0} is beyond the firmware's {MAX_LEDS}-LED buffer")]
+pub struct LedOutOfRange(pub u16);
+
 pub fn is_ideal_name(name: &str) -> bool {
     NAME_PREFIXES.iter().any(|p| name.starts_with(p))
 }
@@ -74,13 +82,19 @@ pub fn diy_exit(unsaved: bool) -> Packet {
 }
 
 /// Sets one LED (0-based) in DIY mode. Brightness is sent as-is, not by scaling the channels.
-pub fn diy_pixel(index: u16, color: Rgb, brightness_pct: u8) -> Packet {
-    dood(1, index, color, brightness_pct)
+pub fn diy_pixel(index: u16, color: Rgb, brightness_pct: u8) -> Result<Packet, LedOutOfRange> {
+    if index >= MAX_LEDS {
+        return Err(LedOutOfRange(index));
+    }
+    Ok(dood(1, index, color, brightness_pct))
 }
 
 /// Sets every LED in DIY mode; the app sends the strip's LED count in place of a pixel index.
-pub fn diy_fill(led_count: u16, color: Rgb, brightness_pct: u8) -> Packet {
-    dood(0, led_count, color, brightness_pct)
+pub fn diy_fill(led_count: u16, color: Rgb, brightness_pct: u8) -> Result<Packet, LedOutOfRange> {
+    if led_count > MAX_LEDS {
+        return Err(LedOutOfRange(led_count));
+    }
+    Ok(dood(0, led_count, color, brightness_pct))
 }
 
 fn dood(target: u8, index: u16, Rgb { r, g, b }: Rgb, brightness_pct: u8) -> Packet {
@@ -214,19 +228,29 @@ mod tests {
     #[test]
     fn diy_pixels_match_capture() {
         assert_eq!(
-            encrypt(&diy_pixel(0, Rgb::new(0xa5, 0x15, 0x15), 0x41)),
+            encrypt(&diy_pixel(0, Rgb::new(0xa5, 0x15, 0x15), 0x41).unwrap()),
             hex!("89875e93862614aca7f70d38702bff7b")
         );
         assert_eq!(
-            encrypt(&diy_pixel(179, Rgb::new(0xa5, 0, 0), 50)),
+            encrypt(&diy_pixel(179, Rgb::new(0xa5, 0, 0), 50).unwrap()),
             hex!("746a837fe5d1e12408d9e11f34df95a2")
         );
     }
 
     #[test]
+    fn diy_rejects_indexes_past_the_firmware_buffer() {
+        let red = Rgb::new(0xff, 0, 0);
+        assert!(diy_pixel(MAX_LEDS - 1, red, 50).is_ok());
+        assert!(diy_pixel(MAX_LEDS, red, 50).is_err());
+        assert!(diy_pixel(u16::MAX, red, 50).is_err());
+        assert!(diy_fill(MAX_LEDS, red, 50).is_ok());
+        assert!(diy_fill(MAX_LEDS + 1, red, 50).is_err());
+    }
+
+    #[test]
     fn diy_fill_matches_capture() {
         assert_eq!(
-            encrypt(&diy_fill(180, Rgb::new(0x56, 0xa5, 0x42), 50)),
+            encrypt(&diy_fill(180, Rgb::new(0x56, 0xa5, 0x42), 50).unwrap()),
             hex!("dcdd7fe7cbf6235242153c019b839bb9")
         );
     }
