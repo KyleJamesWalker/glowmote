@@ -313,3 +313,9 @@ input.text {
 .leave { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .leave p { margin: 0; font-size: 14px; }
 .leave .row { justify-content: flex-start; flex-wrap: wrap; }
+
+.effects { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+.chips button[aria-checked="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.chips button:disabled { cursor: not-allowed; opacity: .4; }

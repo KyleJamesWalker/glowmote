@@ -250,6 +250,35 @@ $("brightness").addEventListener("input", () => {
   sendColor();
 });
 
+// Effects: names come from the firmware's renderers; only captured modes are enabled.
+
+const COLOR_EFFECTS = [
+  "Static", "Running bar", "Stacking", "Meteor", "Pulse wave",
+  "Theater chase", "Running dot", "Bar sweep", "Breathe", "Strobe",
+];
+const COLOR_CAPTURED = new Set([0]);
+const SCENE_EFFECTS = [
+  "Scrolling bands", "Twinkle", "Color wipe", "Curtain", "Chasing dots", "Bar pass",
+  "Stacking fill", "Meteor tails", "Pulse waves", "Gradient flow", "Jump", "Breathe",
+];
+const SCENE_CAPTURED = new Set([7]);
+
+function effectChips(container, names, captured, selected) {
+  $(container).replaceChildren(...names.map((name, mode) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.setAttribute("role", "radio");
+    chip.setAttribute("aria-checked", String(mode === selected));
+    chip.textContent = name;
+    chip.disabled = !captured.has(mode);
+    chip.title = chip.disabled ? `Mode ${mode}: needs a capture before glowmote can send it` : `Mode ${mode}`;
+    return chip;
+  }));
+}
+
+effectChips("color-effects", COLOR_EFFECTS, COLOR_CAPTURED, 0);
+effectChips("scene-effects", SCENE_EFFECTS, SCENE_CAPTURED, 7);
+
 // Tabs
 
 for (const tab of document.querySelectorAll('[role="tab"]')) {

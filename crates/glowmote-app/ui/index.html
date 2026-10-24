@@ -50,6 +50,10 @@
 
       <section id="panel-color" class="card panel" role="tabpanel" aria-labelledby="tab-color">
         <div class="palette" id="palette"></div>
+        <div class="effects">
+          <h3>Effect</h3>
+          <div id="color-effects" class="chips" role="radiogroup" aria-label="Color effect"></div>
+        </div>
         <div class="slider">
           <label for="brightness">Brightness <output id="brightness-value">100%</output></label>
           <input id="brightness" type="range" min="1" max="100" value="100">
@@ -110,7 +114,7 @@
       <section id="panel-scenes" class="card panel" role="tabpanel" aria-labelledby="tab-scenes" hidden>
         <div>
           <h3>Two-color effect</h3>
-          <p class="hint">The effect every vendor-app scene uses. Pick a pair, then play.</p>
+          <p class="hint">Pick two colors and an effect, then play.</p>
         </div>
         <div class="pair">
           <label class="well"><input id="scene-first" type="color" value="#ff3b30"><span>First</span></label>
@@ -118,6 +122,10 @@
           <label class="well"><input id="scene-second" type="color" value="#34c759"><span>Second</span></label>
         </div>
         <div class="presets" id="scene-presets"></div>
+        <div class="effects">
+          <h3>Effect</h3>
+          <div id="scene-effects" class="chips" role="radiogroup" aria-label="Scene effect"></div>
+        </div>
         <div class="slider">
           <label for="scene-speed">Speed <output id="scene-speed-value">50%</output></label>
           <input id="scene-speed" type="range" min="0" max="100" value="50">
