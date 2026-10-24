@@ -1,7 +1,7 @@
 use std::io::{IsTerminal, Write as _};
 use std::time::Duration;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use btleplug::api::{Peripheral as _, WriteType};
 use clap::{Parser, Subcommand};
 use glowmote_ble::{Found, Light, characteristic, pick, scan};
@@ -51,15 +51,80 @@ enum Action {
         #[arg(short, long, default_value_t = 100, value_parser = clap::value_parser!(u8).range(0..=100))]
         brightness: u8,
     },
+    /// Enter DIY mode, as the vendor app does before pixel and fill commands
+    Diy,
+    /// Leave DIY mode
+    DiyExit {
+        /// Send the variant the app uses when the drawing is unsaved
+        #[arg(long)]
+        unsaved: bool,
+    },
+    /// Set one LED (DIY mode)
+    Pixel {
+        /// 0-based LED index
+        index: u16,
+        /// RRGGBB hex, e.g. ff0000
+        rgb: Rgb,
+        /// 0-100
+        #[arg(short, long, default_value_t = 50, value_parser = clap::value_parser!(u8).range(0..=100))]
+        brightness: u8,
+        /// LEDs on the strip
+        #[arg(long, default_value_t = 180)]
+        leds: u16,
+    },
+    /// Set every LED (DIY mode)
+    Fill {
+        /// RRGGBB hex, e.g. ff0000
+        rgb: Rgb,
+        /// 0-100
+        #[arg(short, long, default_value_t = 50, value_parser = clap::value_parser!(u8).range(0..=100))]
+        brightness: u8,
+        /// LEDs on the strip
+        #[arg(long, default_value_t = 180)]
+        leds: u16,
+    },
 }
 
 impl Action {
-    fn packet(&self) -> ideal::Packet {
-        match *self {
+    async fn run(&self, light: &mut Light) -> Result<()> {
+        let packet = match *self {
             Action::On => ideal::power(true),
             Action::Off => ideal::power(false),
             Action::Color { rgb, brightness } => ideal::solid_color(rgb, brightness),
+            Action::Diy => {
+                return light
+                    .send_unacked(&ideal::diy_enter())
+                    .await
+                    .map(|()| println!("sent"));
+            }
+            Action::DiyExit { unsaved } => {
+                return light
+                    .send_unacked(&ideal::diy_exit(unsaved))
+                    .await
+                    .map(|()| println!("sent"));
+            }
+            Action::Pixel {
+                index,
+                rgb,
+                brightness,
+                leds,
+            } => {
+                if index >= leds {
+                    bail!("index {index} is past the last LED ({})", leds - 1);
+                }
+                ideal::diy_pixel(index, rgb, brightness)
+            }
+            Action::Fill {
+                rgb,
+                brightness,
+                leds,
+            } => ideal::diy_fill(leds, rgb, brightness),
+        };
+        match light.send(&packet).await? {
+            Some(tag) => println!("ok ({tag})"),
+            None => println!("sent, but no acknowledgement within 2s"),
         }
+        Ok(())
     }
 }
 
@@ -102,18 +167,11 @@ async fn main() -> Result<()> {
         Command::Probe { pause_secs } => probe(light, Duration::from_secs(pause_secs)).await,
         Command::Action(action) => {
             let mut light = Light::connect(light).await?;
-            report(light.send(&action.packet()).await?);
+            action.run(&mut light).await?;
             light.disconnect().await
         }
     }
     .with_context(|| format!("talking to {name}"))
-}
-
-fn report(ack: Option<String>) {
-    match ack {
-        Some(tag) => println!("ok ({tag})"),
-        None => println!("sent, but no acknowledgement within 2s"),
-    }
 }
 
 async fn shell(found: Found) -> Result<()> {
@@ -141,10 +199,11 @@ async fn shell(found: Found) -> Result<()> {
             }) => break,
             Ok(ShellLine {
                 command: ShellCommand::Action(action),
-            }) => match light.send(&action.packet()).await {
-                Ok(ack) => report(ack),
-                Err(e) => println!("error: {e:#}"),
-            },
+            }) => {
+                if let Err(e) = action.run(&mut light).await {
+                    println!("error: {e:#}");
+                }
+            }
             Err(e) => print!("{e}"),
         }
     }

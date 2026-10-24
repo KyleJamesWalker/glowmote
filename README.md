@@ -3,8 +3,8 @@
 One remote for all your LED lights. A Rust replacement for the pile of vendor apps that
 each control one brand of LED strip, targeting Windows, macOS, Linux and Android.
 
-Supported today: iDeal LED / Winkison BLE controllers (`ISP-*`, `IDL-*`): power, solid color
-and brightness. See [docs/devices.md](docs/devices.md) for what's planned.
+Supported today: iDeal LED / Winkison BLE controllers (`ISP-*`, `IDL-*`): power, solid color,
+brightness, and DIY per-LED color and fill. See [docs/devices.md](docs/devices.md) for what's planned.
 
 ## Usage
 
@@ -24,6 +24,14 @@ Each command above opens its own connection, and the lights blink 3 times on eve
 cargo run -p glowmote -- shell
 printf 'on\ncolor 00ff00\nquit\n' | cargo run -p glowmote -- shell
 ```
+
+DIY commands mirror the vendor app's DIY page: enter DIY mode, then paint.
+
+```sh
+printf 'diy\nfill 00ff00\npixel 0 ff0000\npixel 179 ff0000 -b 80\nquit\n' | cargo run -p glowmote -- shell
+```
+
+`pixel` and `fill` default to 50% brightness and a 180-LED strip (`--leds`).
 
 On macOS the first run asks for Bluetooth permission for your terminal.
 
