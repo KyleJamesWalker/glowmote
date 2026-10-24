@@ -47,6 +47,16 @@ cargo run -p glowmote-app
 For a bundled app, install the CLI (`cargo install tauri-cli --version "^2" --locked`) and run
 `cargo tauri build` in `crates/glowmote-app`.
 
+## Android
+
+The desktop app also builds for Android. Bluetooth does not work there yet: btleplug needs an
+Android backend.
+
+```sh
+source tools/android-env.sh   # Android SDK and NDK in ~/Library/Android/sdk, JDK 17
+cd crates/glowmote-app && cargo tauri android build --debug --apk --target aarch64
+```
+
 ## Layout
 
 | Path | Contents |
