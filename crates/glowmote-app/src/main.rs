@@ -66,6 +66,44 @@ async fn color(app: State<'_, App>, rgb: String, brightness: u8) -> CmdResult<St
     send(&app, ideal::solid_color(rgb, brightness.min(100))).await
 }
 
+#[tauri::command]
+async fn diy(app: State<'_, App>, on: bool) -> CmdResult<()> {
+    let packet = if on {
+        ideal::diy_enter()
+    } else {
+        ideal::diy_exit(false)
+    };
+    let mut slot = app.light.lock().await;
+    let light = slot.as_mut().ok_or("not connected")?;
+    light.send_unacked(&packet).await.map_err(err)
+}
+
+#[tauri::command]
+async fn diy_pixel(
+    app: State<'_, App>,
+    index: u16,
+    leds: u16,
+    rgb: String,
+    brightness: u8,
+) -> CmdResult<String> {
+    if index >= leds {
+        return Err(format!("index {index} is past the last LED"));
+    }
+    let rgb: Rgb = rgb.parse().map_err(|e| format!("{e}"))?;
+    send(&app, ideal::diy_pixel(index, rgb, brightness)).await
+}
+
+#[tauri::command]
+async fn diy_fill(
+    app: State<'_, App>,
+    leds: u16,
+    rgb: String,
+    brightness: u8,
+) -> CmdResult<String> {
+    let rgb: Rgb = rgb.parse().map_err(|e| format!("{e}"))?;
+    send(&app, ideal::diy_fill(leds, rgb, brightness)).await
+}
+
 async fn send(app: &App, packet: ideal::Packet) -> CmdResult<String> {
     let mut slot = app.light.lock().await;
     let light = slot.as_mut().ok_or("not connected")?;
@@ -84,7 +122,10 @@ fn main() {
             connect,
             disconnect,
             power,
-            color
+            color,
+            diy,
+            diy_pixel,
+            diy_fill
         ])
         .run(tauri::generate_context!())
         .expect("error while running glowmote");
