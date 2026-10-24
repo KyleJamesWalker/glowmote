@@ -67,6 +67,26 @@ async fn color(app: State<'_, App>, rgb: String, brightness: u8) -> CmdResult<St
 }
 
 #[tauri::command]
+async fn scene(
+    app: State<'_, App>,
+    first: String,
+    second: String,
+    speed: u8,
+    brightness: u8,
+    reverse: bool,
+) -> CmdResult<()> {
+    let parse = |hex: &str| hex.parse::<Rgb>().map_err(|e| format!("{e}"));
+    let frame = ideal::scene_frame([parse(&first)?, parse(&second)?], brightness);
+    let header = ideal::scene(reverse, speed, brightness);
+    let mut slot = app.light.lock().await;
+    let light = slot.as_mut().ok_or("not connected")?;
+    match light.send_scene(&header, &frame).await.map_err(err)? {
+        true => Ok(()),
+        false => Err("the light did not confirm the scene colors".into()),
+    }
+}
+
+#[tauri::command]
 async fn diy(app: State<'_, App>, on: bool) -> CmdResult<()> {
     let packet = if on {
         ideal::diy_enter()
@@ -123,6 +143,7 @@ fn main() {
             disconnect,
             power,
             color,
+            scene,
             diy,
             diy_pixel,
             diy_fill

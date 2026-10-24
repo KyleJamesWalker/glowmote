@@ -76,12 +76,28 @@
       </section>
 
       <section id="panel-scenes" class="card panel" role="tabpanel" aria-labelledby="tab-scenes" hidden>
-        <p class="soon">Captured, not built yet</p>
-        <ul class="tiles">
-          <li><span class="tile-art" data-art="tree"></span>Christmas tree</li>
-          <li><span class="tile-art" data-art="reef"></span>Reef</li>
-          <li><span class="tile-art" data-art="fence"></span>Fence</li>
-        </ul>
+        <div>
+          <h3>Two-color effect</h3>
+          <p class="hint">The effect every vendor-app scene uses. Pick a pair, then play.</p>
+        </div>
+        <div class="pair">
+          <label class="well"><input id="scene-first" type="color" value="#ff3b30"><span>First</span></label>
+          <button id="scene-swap" class="ghost" type="button" aria-label="Swap colors">⇄</button>
+          <label class="well"><input id="scene-second" type="color" value="#34c759"><span>Second</span></label>
+        </div>
+        <div class="presets" id="scene-presets"></div>
+        <div class="slider">
+          <label for="scene-speed">Speed <output id="scene-speed-value">50%</output></label>
+          <input id="scene-speed" type="range" min="0" max="100" value="50">
+        </div>
+        <div class="slider">
+          <label for="scene-brightness">Brightness <output id="scene-brightness-value">100%</output></label>
+          <input id="scene-brightness" type="range" min="1" max="100" value="100">
+        </div>
+        <div class="row">
+          <label class="inline toggle-row">Reverse <span class="switch"><input id="scene-reverse" type="checkbox"><span></span></span></label>
+          <button id="scene-play" class="primary" type="button">Play</button>
+        </div>
       </section>
 
       <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>

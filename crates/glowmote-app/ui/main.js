@@ -187,8 +187,79 @@ for (const tab of document.querySelectorAll('[role="tab"]')) {
       $(t.getAttribute("aria-controls")).hidden = !selected;
     }
     previewingWhite = false;
+    scenePlaying = false;
   });
 }
+
+// Scenes
+
+const SCENE_PRESETS = [
+  ["Holiday", "#ff3b30", "#34c759"],
+  ["Candy cane", "#ff3b30", "#ffffff"],
+  ["Ocean", "#007aff", "#00c7be"],
+  ["Sunset", "#ff9500", "#ff2d92"],
+  ["Spooky", "#ff9500", "#af52de"],
+  ["Ice", "#ffffff", "#30b0ff"],
+];
+
+let scenePlaying = false;
+let sceneInFlight = false;
+let sceneQueued = false;
+async function sendScene() {
+  sceneQueued = true;
+  if (sceneInFlight) return;
+  sceneInFlight = true;
+  while (sceneQueued) {
+    sceneQueued = false;
+    await run("scene", {
+      first: balance($("scene-first").value),
+      second: balance($("scene-second").value),
+      speed: Number($("scene-speed").value),
+      brightness: Number($("scene-brightness").value),
+      reverse: $("scene-reverse").checked,
+    });
+  }
+  sceneInFlight = false;
+}
+
+function playScene() {
+  scenePlaying = true;
+  showPower(true);
+  sendScene();
+}
+
+const resendScene = () => { if (scenePlaying) sendScene(); };
+
+$("scene-presets").replaceChildren(...SCENE_PRESETS.map(([name, a, b]) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  const duo = document.createElement("span");
+  duo.className = "duo";
+  duo.style.setProperty("--a", a);
+  duo.style.setProperty("--b", b);
+  button.append(duo, name);
+  button.addEventListener("click", () => {
+    $("scene-first").value = a;
+    $("scene-second").value = b;
+    playScene();
+  });
+  return button;
+}));
+
+for (const [id, unit] of [["scene-speed", "%"], ["scene-brightness", "%"]]) {
+  $(id).addEventListener("input", () => {
+    $(`${id}-value`).textContent = `${$(id).value}${unit}`;
+    resendScene();
+  });
+}
+for (const id of ["scene-first", "scene-second", "scene-reverse"]) {
+  $(id).addEventListener("input", resendScene);
+}
+$("scene-swap").addEventListener("click", () => {
+  [$("scene-first").value, $("scene-second").value] = [$("scene-second").value, $("scene-first").value];
+  resendScene();
+});
+$("scene-play").addEventListener("click", playScene);
 
 // DIY
 

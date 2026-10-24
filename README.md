@@ -4,7 +4,7 @@ One remote for all your LED lights. A Rust replacement for the pile of vendor ap
 each control one brand of LED strip, targeting Windows, macOS, Linux and Android.
 
 Supported today: iDeal LED / Winkison BLE controllers (`ISP-*`, `IDL-*`): power, solid color,
-brightness, and DIY per-LED color and fill. See [docs/devices.md](docs/devices.md) for what's planned.
+brightness, the two-color scene effect, and DIY per-LED color and fill. See [docs/devices.md](docs/devices.md) for what's planned.
 
 ## Usage
 
@@ -31,13 +31,13 @@ DIY commands mirror the vendor app's DIY page: enter DIY mode, then paint.
 printf 'diy\nfill 00ff00\npixel 0 ff0000\npixel 179 ff0000 -b 80\nquit\n' | cargo run -p glowmote -- shell
 ```
 
-`pixel` and `fill` default to 50% brightness and a 180-LED strip (`--leds`).
+`scene ff3b30 34c759 --speed 60` plays the two-color effect. `pixel` and `fill` default to 50% brightness and a 180-LED strip (`--leds`).
 
 On macOS the first run asks for Bluetooth permission for your terminal.
 
 ## Desktop app
 
-A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color, brightness and DIY painting. It holds
+A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color, brightness, scenes, DIY painting and white balance. It holds
 one connection while open.
 
 ```sh
