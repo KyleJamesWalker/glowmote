@@ -92,9 +92,92 @@ pub fn power(on: bool) -> Packet {
 
 /// Solid color. Brightness is applied by scaling the channels, as the vendor app does.
 pub fn solid_color(color: Rgb, brightness_pct: u8) -> Packet {
-    let Rgb { r, g, b } = scale(color, brightness_pct.min(100));
-    // mode 0 (solid), direction 0, fixed 100, speed 0x50, color twice, saturation 0x32
-    tagged(b"SGLS", &[0x00, 0x00, 0x64, 0x50, r, g, b, r, g, b, 0x32])
+    let c = scale(color, brightness_pct.min(100));
+    sgls(0, false, 0x50, [c, c])
+}
+
+/// Number of `SGLS` effects. The firmware indexes a 10-slot array with the mode unchecked.
+pub const EFFECT_COUNT: u8 = 10;
+
+/// An `SGLS` effect (mode 0 is solid): `colors` are foreground and background. `reversed` sets
+/// byte 6, which the app leaves at `00` by default. Brightness scales the channels.
+pub fn effect(
+    mode: u8,
+    reversed: bool,
+    speed_pct: u8,
+    colors: [Rgb; 2],
+    brightness_pct: u8,
+) -> Result<Packet, OutOfRange> {
+    check("effect mode", mode, 0, EFFECT_COUNT as u16 - 1)?;
+    check("speed", speed_pct, 0, 100)?;
+    check("brightness", brightness_pct, 0, 100)?;
+    Ok(sgls(
+        mode,
+        reversed,
+        speed_pct,
+        colors.map(|c| scale(c, brightness_pct)),
+    ))
+}
+
+fn sgls(mode: u8, reversed: bool, speed: u8, [c1, c2]: [Rgb; 2]) -> Packet {
+    // fixed 100 in byte 7 and saturation 0x32, as captured
+    tagged(
+        b"SGLS",
+        &[
+            mode,
+            reversed as u8,
+            0x64,
+            speed,
+            c1.r,
+            c1.g,
+            c1.b,
+            c2.r,
+            c2.g,
+            c2.b,
+            0x32,
+        ],
+    )
+}
+
+// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
+#[cfg(test)]
+mod predicted_effect {
+    use super::*;
+    use hex_literal::hex;
+
+    const RED: Rgb = Rgb::new(0xff, 0, 0);
+    const GREEN: Rgb = Rgb::new(0, 0xff, 0);
+    const BLUE: Rgb = Rgb::new(0, 0, 0xff);
+    const WHITE: Rgb = Rgb::new(0xff, 0xff, 0xff);
+
+    #[test]
+    fn effects_match_prediction() {
+        assert_eq!(
+            encrypt(&effect(3, false, 50, [RED, BLUE], 100).unwrap()),
+            hex!("ad53ba276e719a2bd006adc7e52539d8")
+        );
+        assert_eq!(
+            encrypt(&effect(9, true, 100, [GREEN, WHITE], 100).unwrap()),
+            hex!("417f07c784b826379da1b63808a7a11a")
+        );
+    }
+
+    #[test]
+    fn solid_effect_matches_solid_color_capture() {
+        assert_eq!(
+            encrypt(&effect(0, false, 0x50, [RED, RED], 100).unwrap()),
+            hex!("73baa3e311ef375b0c2965911e7f5357")
+        );
+    }
+
+    #[test]
+    fn effect_rejects_out_of_range_fields() {
+        assert!(effect(EFFECT_COUNT - 1, false, 100, [RED, BLUE], 100).is_ok());
+        let err = effect(EFFECT_COUNT, false, 50, [RED, BLUE], 100).unwrap_err();
+        assert_eq!(err.field, "effect mode");
+        assert!(effect(0, false, 101, [RED, BLUE], 100).is_err());
+        assert!(effect(0, false, 50, [RED, BLUE], 101).is_err());
+    }
 }
 
 /// Enters the DIY pixel editor, as the app does when its DIY page opens.
