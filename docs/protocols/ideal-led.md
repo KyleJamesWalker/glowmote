@@ -137,7 +137,8 @@ The colors follow in a second step:
 2. Write the colors **unencrypted** to `0x0009` (`…960a`) in frames of
    `<data len + 1> <frame index> <data>`, padded to 98 bytes (96 data bytes per frame once the
    MTU is raised, 18 otherwise). Data is `R G B` per color, each channel scaled by brightness
-   and truncated (`ff` at 29% → `49`); no minimum.
+   and truncated (`ff` at 29% → `49`); no minimum. The app scales in 32-bit float, which gives
+   one less than integer math for 10 value and percentage pairs, such as 100 at 53% (`34`).
 3. The light replies `MULTREOK` for each frame except the last, then `MULTCPOK`.
 
 Example, 2 colors `ff00ff` and `1400cb` at brightness 29: `07 00 49 00 49 05 00 3a` + zeros.
@@ -221,22 +222,46 @@ the reference device byte for byte, so the rest likely carry over. Each reply be
 
 | Command (plaintext) | Purpose | Notes |
 |---|---|---|
-| `0c 'SCHD' onEn onMask onH onM offEn offMask offH offM 00 00 00` | on and off timers | Week mask bit 0 = Monday. Mask 0 = once. Fires against the `TIME` clock. The app's builder is `getTimerLightSwitch`; `SCHL`/`SCH0` was a misreading |
+| `0c 'SCHD' onEn onMask onH onM offEn offMask offH offM 00 00 00` | on and off timers | Week mask bit 0 = Monday. Mask 0 = once: the firmware picks today, or tomorrow if the hour has passed. Fires against the `TIME` clock. The app's builder is `getTimerLightSwitch`; `SCHL`/`SCH0` was a misreading |
 | `06 'LAMPT' type volt rate` | LED chip type | **type 0–4 only** (WS2812B, SK6813, SM16703, UCS1903B, QS2633) |
 | `09 'LAMPN' seg_hi seg_lo total_hi total_lo` | LEDs per segment and total | keep total ≤ 400 (`TR2210` rejects more with `LAMPNMAX`) |
 | `05 'LAMPQ'` | query type and capabilities | reply `07 'LAMPQ' type volt 00` then 480, 160, 100, 140 (u16 LE) |
 | `07 'DIRECT' rev` | strip direction | 0 mirrors pixel order inside each segment |
 | `07 'SPLAY' scenes frames` + frames on `…960a` | playlist of saved scenes | **scenes 1–8**, frame scene index 0–7; finish with `06 'SPLACP'` then `08 'STARTCY' 01` |
-| `04 'DOOT' frames` + frames on `…960a` | bulk DIY upload | 7-byte records `count_hi count_lo R G B mode speed`; **total count ≤ LED count**; finish with `06 'DOOTCP'` then `08 'DTARTCY' 01` |
+| `04 'DOOT' frames` + frames on `…960a` | bulk DIY upload | 7-byte records `count_hi count_lo R G B mode speed`; **total count ≤ LED count**; finish with `06 'DOOTCP'` then `08 'DTARTCY' 01`. See [DOOT](#doot-bulk-diy-predicted) |
 | `04 'DEN' 01` | enter DIY without clearing the canvas | |
 | `04 'MOVE'` | identify blink | no reply |
 | `0a 'CHECKLINE' 01`, `CONFIRM`, `CSTOPR` | RGB channel-order wizard | result saved |
 | `06 'LIGHT' n` | brightness | no reply |
-| `MIC`, `RSTOPR` | music mode | rhythm data on `…960b` |
+| `06 'MIC' on duration effect`, `04 'MIC' 00`, `06 'RSTOPR'` | music mode | rhythm data on `…960b`; see [Rhythm](#music-rhythm-predicted) |
 | `TEST` | factory test | **never send**: sets 400 LEDs and cycles colors |
 
 Exact predicted plaintext and ciphertext for each command and reply is in
 `research/firmware/predictions/predict.txt` (git-ignored).
+
+### `DOOT` (bulk DIY, predicted)
+
+From `DiyAgreement` and the `TR2309` handler:
+
+- Frames are `<data len + 1> <frame index> <records…>`, padded to 100 bytes: 14 records (98
+  bytes) per frame once the MTU is raised, 19 data bytes otherwise.
+- Each frame is acked with `09 'DOOTREOK' <frame index>`; the index replaces the usual trailing
+  zero, so the reply has no `OK` suffix at `len`.
+- On `DOOTCP` the firmware keeps the drawing only if the last frame index equals the header's
+  count minus 1. The app computes the count as `ceil(bytes / 99)`, which is one short when the
+  last frame holds few records (for example 99 records in 8 frames).
+- `DOOT` does not reset the firmware's pixel write offset; `DOOTCP`, `SPLACP` and `STARTCY 01` do.
+  An upload abandoned before `DOOTCP` makes the next one start mid-strip.
+- After `DOOTCPOK` the app sends `DTARTCY 01`; on timeout it sends `DTARTCY 00`, which restores
+  the previous mode.
+
+### Music rhythm (predicted)
+
+`BleProtocol.sendRhythm` streams `02 <effect> <level>` + zeros, encrypted, to `…960b` at most
+once per 50 ms. The level is the microphone level halved and clamped to 1–100. The app offers
+effects 0–9 on current lights (0–4 on older ones). The `TR2309` firmware switches to music mode
+on the first block; `RSTOPR` restores the previous mode. `MIC` selects the light's own
+microphone instead (the app sends `on` = 1 and a `duration` slider value, default 100).
 
 ## OTA service (`ae00`)
 
