@@ -78,7 +78,10 @@ async fn diy_fill(c: Ctl<'_>, leds: u16, rgb: String, brightness: u8) -> CmdResu
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(tauri_plugin_blec::init());
+    builder
         .manage(Controller::new(SCAN_TIME))
         .invoke_handler(tauri::generate_handler![
             status,

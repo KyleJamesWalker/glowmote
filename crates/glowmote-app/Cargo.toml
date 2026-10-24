@@ -12,5 +12,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 glowmote-control = { path = "../glowmote-control" }
 tauri = { version = "2.12.5", features = [] }
 
+[target.'cfg(target_os = "android")'.dependencies]
+tauri-plugin-blec = "0.18.0"
+
 [build-dependencies]
 tauri-build = { version = "2.7.4", features = [] }
