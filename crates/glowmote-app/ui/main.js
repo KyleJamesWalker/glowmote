@@ -82,11 +82,57 @@ $("off").addEventListener("click", () => { showPower(false); run("power", { on: 
 
 // Color
 
+// White balance
+
+const WB_DEFAULT = { r: 100, g: 63, b: 44, temp: 0, tint: 0 };
+const WB_KEYS = ["r", "g", "b", "temp", "tint"];
+let wb = { ...WB_DEFAULT };
+
+function loadWb() {
+  try {
+    wb = { ...WB_DEFAULT, ...JSON.parse(localStorage.getItem("whiteBalance") ?? "{}") };
+  } catch {}
+}
+
+function saveWb() {
+  try {
+    localStorage.setItem("whiteBalance", JSON.stringify(wb));
+  } catch {}
+}
+
+const signed = (v, low, high) => (v === 0 ? "0" : `${Math.abs(v)} ${v < 0 ? low : high}`);
+
+function showWb() {
+  for (const key of WB_KEYS) $(`wb-${key}`).value = wb[key];
+  for (const ch of ["r", "g", "b"]) $(`wb-${ch}-value`).textContent = `${wb[ch]}%`;
+  $("wb-temp-value").textContent = signed(wb.temp, "cool", "warm");
+  $("wb-tint-value").textContent = signed(wb.tint, "green", "magenta");
+}
+
+// Gains only ever reduce a channel, so a balanced color never exceeds what was picked.
+function gains() {
+  let r = wb.r / 100, g = wb.g / 100, b = wb.b / 100;
+  if (wb.temp > 0) b *= 1 - wb.temp / 100;
+  if (wb.temp < 0) r *= 1 + wb.temp / 100;
+  if (wb.tint > 0) g *= 1 - wb.tint / 100;
+  if (wb.tint < 0) { r *= 1 + wb.tint / 100; b *= 1 + wb.tint / 100; }
+  return [r, g, b];
+}
+
+function balance(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = gains();
+  const ch = (v, gain) => Math.round(v * gain).toString(16).padStart(2, "0");
+  return `#${ch(n >> 16, r)}${ch((n >> 8) & 0xff, g)}${ch(n & 0xff, b)}`;
+}
+
+let previewingWhite = false;
+
 // The picker and slider fire faster than the light acknowledges; only the latest value is sent.
 let colorInFlight = false;
 let queuedColor = null;
-async function sendColor() {
-  queuedColor = { rgb: $("color").value, brightness: Number($("brightness").value) };
+async function sendColor(picked = $("color").value) {
+  queuedColor = { rgb: balance(picked), brightness: Number($("brightness").value) };
   if (colorInFlight) return;
   colorInFlight = true;
   while (queuedColor) {
@@ -140,6 +186,7 @@ for (const tab of document.querySelectorAll('[role="tab"]')) {
       t.setAttribute("aria-selected", String(selected));
       $(t.getAttribute("aria-controls")).hidden = !selected;
     }
+    previewingWhite = false;
   });
 }
 
@@ -152,7 +199,7 @@ const queueDiy = (command, args) => {
   return diyQueue;
 };
 const diyArgs = () => ({
-  rgb: $("color").value,
+  rgb: balance($("color").value),
   brightness: Number($("diy-brightness").value),
   leds: Number($("leds").value),
 });
@@ -249,7 +296,29 @@ $("fill").addEventListener("click", () => {
   queueDiy("diy_fill", args);
 });
 
+for (const key of WB_KEYS) {
+  $(`wb-${key}`).addEventListener("input", () => {
+    wb[key] = Number($(`wb-${key}`).value);
+    showWb();
+    saveWb();
+    if (previewingWhite) sendColor("#ffffff");
+  });
+}
+$("wb-white").addEventListener("click", () => {
+  previewingWhite = true;
+  showPower(true);
+  sendColor("#ffffff");
+});
+$("wb-reset").addEventListener("click", () => {
+  wb = { ...WB_DEFAULT };
+  showWb();
+  saveWb();
+  if (previewingWhite) sendColor("#ffffff");
+});
+
 $("scan").addEventListener("click", scan);
+loadWb();
+showWb();
 pickColor($("color").value, false);
 loadLayout();
 buildStrip();

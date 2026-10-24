@@ -42,6 +42,7 @@
         <button role="tab" id="tab-diy" aria-controls="panel-diy" aria-selected="false">DIY</button>
         <button role="tab" id="tab-scenes" aria-controls="panel-scenes" aria-selected="false">Scenes</button>
         <button role="tab" id="tab-timers" aria-controls="panel-timers" aria-selected="false">Timers</button>
+        <button role="tab" id="tab-setup" aria-controls="panel-setup" aria-selected="false">Setup</button>
       </nav>
 
       <section id="panel-color" class="card panel" role="tabpanel" aria-labelledby="tab-color">
@@ -86,6 +87,41 @@
       <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>
         <p class="soon">Not captured yet</p>
         <p class="hint">On and off schedules stored on the light. Needs a capture from the vendor app first.</p>
+      </section>
+
+      <section id="panel-setup" class="card panel" role="tabpanel" aria-labelledby="tab-setup" hidden>
+        <div>
+          <h3>White balance</h3>
+          <p class="hint">Scales each channel before sending. Show white, then lower the strongest channels until the strip looks white.</p>
+        </div>
+        <div class="slider channel" data-ch="r">
+          <label for="wb-r">Red <output id="wb-r-value"></output></label>
+          <input id="wb-r" type="range" min="0" max="100">
+        </div>
+        <div class="slider channel" data-ch="g">
+          <label for="wb-g">Green <output id="wb-g-value"></output></label>
+          <input id="wb-g" type="range" min="0" max="100">
+        </div>
+        <div class="slider channel" data-ch="b">
+          <label for="wb-b">Blue <output id="wb-b-value"></output></label>
+          <input id="wb-b" type="range" min="0" max="100">
+        </div>
+        <div>
+          <h3>Surface</h3>
+          <p class="hint">For light bouncing off a wall: shift away from the wall's color.</p>
+        </div>
+        <div class="slider channel" data-ch="temp">
+          <label for="wb-temp">Temperature <output id="wb-temp-value"></output></label>
+          <input id="wb-temp" type="range" min="-50" max="50">
+        </div>
+        <div class="slider channel" data-ch="tint">
+          <label for="wb-tint">Tint <output id="wb-tint-value"></output></label>
+          <input id="wb-tint" type="range" min="-50" max="50">
+        </div>
+        <div class="row">
+          <button id="wb-reset" type="button">Reset</button>
+          <button id="wb-white" class="primary" type="button">Show white</button>
+        </div>
       </section>
     </div>
 
