@@ -8,41 +8,88 @@
   <script src="main.js" defer></script>
 </head>
 <body>
+  <div class="glow" aria-hidden="true"></div>
   <main>
     <header>
-      <h1>glowmote</h1>
-      <p id="status" role="status">Not connected</p>
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <h1>glowmote</h1>
+      </div>
+      <span id="link" class="pill" data-state="off"><span class="dot"></span><span id="link-text">Not connected</span></span>
     </header>
 
-    <section aria-labelledby="lights-heading">
+    <section class="card" aria-labelledby="lights-heading">
       <div class="row">
         <h2 id="lights-heading">Lights</h2>
-        <button id="scan" type="button">Scan</button>
+        <button id="scan" class="ghost" type="button">Scan</button>
       </div>
       <ul id="devices"></ul>
     </section>
 
-    <section id="controls" aria-labelledby="controls-heading" inert>
-      <h2 id="controls-heading">Controls</h2>
-      <div class="row power">
-        <button id="on" type="button">On</button>
-        <button id="off" type="button">Off</button>
-      </div>
-
-      <label for="color">Color</label>
-      <div class="row">
-        <input id="color" type="color" value="#ff0000">
-        <div class="swatches">
-          <button type="button" data-color="#ff0000" aria-label="Red"></button>
-          <button type="button" data-color="#00ff00" aria-label="Green"></button>
-          <button type="button" data-color="#0000ff" aria-label="Blue"></button>
-          <button type="button" data-color="#ffffff" aria-label="White"></button>
+    <div id="controls" inert>
+      <section class="hero card">
+        <div id="orb" class="orb">
+          <input id="color" type="color" value="#ff3b30" aria-label="Pick a color">
         </div>
-      </div>
+        <div class="segmented" role="group" aria-label="Power">
+          <button id="on" type="button">On</button>
+          <button id="off" type="button">Off</button>
+        </div>
+      </section>
 
-      <label for="brightness">Brightness <output id="brightness-value">100%</output></label>
-      <input id="brightness" type="range" min="1" max="100" value="100">
-    </section>
+      <nav class="tabs" role="tablist" aria-label="Modes">
+        <button role="tab" id="tab-color" aria-controls="panel-color" aria-selected="true">Color</button>
+        <button role="tab" id="tab-diy" aria-controls="panel-diy" aria-selected="false">DIY</button>
+        <button role="tab" id="tab-scenes" aria-controls="panel-scenes" aria-selected="false">Scenes</button>
+        <button role="tab" id="tab-timers" aria-controls="panel-timers" aria-selected="false">Timers</button>
+      </nav>
+
+      <section id="panel-color" class="card panel" role="tabpanel" aria-labelledby="tab-color">
+        <div class="palette" id="palette"></div>
+        <div class="slider">
+          <label for="brightness">Brightness <output id="brightness-value">100%</output></label>
+          <input id="brightness" type="range" min="1" max="100" value="100">
+        </div>
+      </section>
+
+      <section id="panel-diy" class="card panel" role="tabpanel" aria-labelledby="tab-diy" hidden>
+        <div class="row">
+          <div>
+            <h3>Paint LEDs</h3>
+            <p class="hint">Uses the color from the orb.</p>
+          </div>
+          <label class="switch"><input id="diy-mode" type="checkbox"><span></span><span class="sr">DIY mode</span></label>
+        </div>
+        <div id="diy-tools" class="stack" inert>
+          <div class="slider">
+            <label for="diy-brightness">Brightness <output id="diy-brightness-value">50%</output></label>
+            <input id="diy-brightness" type="range" min="0" max="100" value="50">
+          </div>
+          <div class="row layout">
+            <label for="leds" class="inline">LEDs <input id="leds" type="number" min="1" max="1024" value="180"></label>
+            <label for="split" class="inline">Controller at LED <input id="split" type="number" min="0" max="1023" value="89"></label>
+          </div>
+          <button id="fill" class="primary" type="button">Fill strip</button>
+          <div id="strip" aria-label="LED strip"></div>
+        </div>
+      </section>
+
+      <section id="panel-scenes" class="card panel" role="tabpanel" aria-labelledby="tab-scenes" hidden>
+        <p class="soon">Captured, not built yet</p>
+        <ul class="tiles">
+          <li><span class="tile-art" data-art="tree"></span>Christmas tree</li>
+          <li><span class="tile-art" data-art="reef"></span>Reef</li>
+          <li><span class="tile-art" data-art="fence"></span>Fence</li>
+        </ul>
+      </section>
+
+      <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>
+        <p class="soon">Not captured yet</p>
+        <p class="hint">On and off schedules stored on the light. Needs a capture from the vendor app first.</p>
+      </section>
+    </div>
+
+    <p id="status" role="status"></p>
   </main>
 </body>
 </html>

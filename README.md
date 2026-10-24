@@ -37,7 +37,7 @@ On macOS the first run asks for Bluetooth permission for your terminal.
 
 ## Desktop app
 
-A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color and brightness. It holds
+A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color, brightness and DIY painting. It holds
 one connection while open.
 
 ```sh
