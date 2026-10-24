@@ -12,6 +12,8 @@ pub const SERVICE_UUID: &str = "0000fff0-0000-1000-8000-00805f9b34fb";
 pub const WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129600";
 pub const NOTIFY_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129601";
 pub const VERSION_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-925416129602";
+/// Takes plaintext data frames, such as scene colors.
+pub const BULK_WRITE_CHAR_UUID: &str = "d44bc439-abfd-45a2-b575-92541612960a";
 
 pub const NAME_PREFIXES: [&str; 2] = ["ISP-", "IDL-"];
 
@@ -102,6 +104,38 @@ fn dood(target: u8, index: u16, Rgb { r, g, b }: Rgb, brightness_pct: u8) -> Pac
     );
     p[0] = 0x0d; // the length byte excludes the two trailing zeros
     p
+}
+
+/// Every scene captured used this effect byte.
+const SCENE_EFFECT: u8 = 0x07;
+const SCENE_FRAME_LEN: usize = 98;
+
+/// Scene header (`MULT`) for a two-color effect. Send it, wait for `MULTOK`, then write
+/// [`scene_frame`] unencrypted to [`BULK_WRITE_CHAR_UUID`]; the light finishes with `MULTCPOK`.
+pub fn scene(reversed: bool, speed_pct: u8, brightness_pct: u8) -> Packet {
+    tagged(
+        b"MULT",
+        &[
+            SCENE_EFFECT,
+            reversed as u8,
+            0x64,
+            speed_pct.min(100),
+            2,
+            brightness_pct.min(100),
+        ],
+    )
+}
+
+/// The color frame that follows [`scene`]: each channel scaled by brightness and truncated.
+pub fn scene_frame(colors: [Rgb; 2], brightness_pct: u8) -> [u8; SCENE_FRAME_LEN] {
+    let pct = brightness_pct.min(100) as u16;
+    let ch = |v: u8| (v as u16 * pct / 100) as u8;
+    let mut frame = [0u8; SCENE_FRAME_LEN];
+    frame[0] = 7; // data length + 1
+    for (i, Rgb { r, g, b }) in colors.into_iter().enumerate() {
+        frame[2 + i * 3..5 + i * 3].copy_from_slice(&[ch(r), ch(g), ch(b)]);
+    }
+    frame
 }
 
 fn scale(c: Rgb, pct: u8) -> Rgb {
@@ -211,6 +245,40 @@ mod tests {
             encrypt(&diy_exit(false)),
             hex!("5724de0f03efb16acbe078544cbc4ce1")
         );
+    }
+
+    #[test]
+    fn scenes_match_capture() {
+        assert_eq!(
+            encrypt(&scene(false, 5, 0x1d)),
+            hex!("612074c06b15b5b0616f2569e669062c")
+        );
+        assert_eq!(
+            encrypt(&scene(false, 100, 100)),
+            hex!("29d3a784888e6dcd9baaccee9809a18c")
+        );
+        assert_eq!(
+            encrypt(&scene(true, 100, 100)),
+            hex!("c8d3bced6b94ddee42f40213ea1866ce")
+        );
+    }
+
+    #[test]
+    fn scene_frames_match_capture() {
+        let colors = [Rgb::new(0xff, 0, 0xff), Rgb::new(0x14, 0, 0xcb)];
+        let dim = scene_frame(colors, 0x1d);
+        assert_eq!(&dim[..8], &hex!("070049004905003a"));
+        assert!(dim[8..].iter().all(|&b| b == 0));
+        assert_eq!(&scene_frame(colors, 5)[..8], &hex!("07000c000c01000a"));
+        assert_eq!(&scene_frame(colors, 100)[..8], &hex!("0700ff00ff1400cb"));
+    }
+
+    #[test]
+    fn decrypts_scene_acks() {
+        let mult = decrypt(&hex!("c68ed93a891110cab5c8067f843d04e6"));
+        let done = decrypt(&hex!("33e943ec5a7cfc5975cdaae497bf25f2"));
+        assert_eq!(parse_ack(&mult), Some("MULT"));
+        assert_eq!(parse_ack(&done), Some("MULTCP"));
     }
 
     #[test]
