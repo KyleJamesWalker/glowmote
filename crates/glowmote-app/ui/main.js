@@ -83,9 +83,9 @@ async function showConnected(name) {
   $("disconnect").hidden = false;
   setLink("on", name);
   const info = await run("info");
-  $("info-model").textContent = info?.model ?? "–";
+  $("info-model").textContent = info ? info.model ?? "unavailable on this platform" : "–";
   $("info-firmware").textContent = info?.firmware?.filter(Boolean).join(" · ") || "–";
-  $("link").title = info ? `${info.model} · ${info.firmware.filter(Boolean).join(" · ")}` : "";
+  $("link").title = info ? [info.model, ...info.firmware].filter(Boolean).join(" · ") : "";
 }
 
 function showDisconnected(text = "Not connected") {

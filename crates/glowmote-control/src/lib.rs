@@ -73,7 +73,7 @@ pub trait Link: Send + 'static {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct LightInfo {
     pub name: String,
-    pub model: String,
+    pub model: Option<String>,
     pub firmware: [Option<String>; 2],
 }
 
@@ -360,7 +360,7 @@ mod tests {
         async fn info(&mut self) -> anyhow::Result<LightInfo> {
             Ok(LightInfo {
                 name: self.name.clone(),
-                model: "TR0000R000-00".into(),
+                model: Some("TR0000R000-00".into()),
                 firmware: [Some("V0".into()), None],
             })
         }

@@ -93,7 +93,8 @@ impl Light {
     }
 
     /// The model string, e.g. `TR2411R003-07`, from the write characteristic's user description.
-    pub async fn read_model(&mut self) -> Result<String> {
+    /// `None` where the platform cannot read GATT descriptors (Android, via blec).
+    pub async fn read_model(&mut self) -> Result<Option<String>> {
         self.link.read_model().await
     }
 

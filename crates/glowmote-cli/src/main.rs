@@ -212,7 +212,11 @@ async fn main() -> Result<()> {
 async fn info(found: Found) -> Result<()> {
     let mut light = Light::connect(found).await?;
     println!("name:     {}", light.name);
-    println!("model:    {}", light.read_model().await?);
+    let model = light.read_model().await?;
+    println!(
+        "model:    {}",
+        model.as_deref().unwrap_or("unavailable on this platform")
+    );
     let [first, second] = light.versions().await?;
     let show = |v: Option<String>| v.unwrap_or_else(|| "no reply".into());
     println!("firmware: {}", show(first));

@@ -122,8 +122,8 @@ impl Link {
         Ok(())
     }
 
-    pub(crate) async fn read_model(&self) -> Result<String> {
-        bail!("reading the model needs a GATT descriptor read, which blec does not support")
+    pub(crate) async fn read_model(&self) -> Result<Option<String>> {
+        Ok(None)
     }
 
     pub(crate) async fn disconnect(self) -> Result<()> {

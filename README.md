@@ -74,7 +74,7 @@ failed or did not acknowledge.
 | `POST /api/scan_lights` | `{}` | light names |
 | `POST /api/connect` | `{"name"}` | `null` |
 | `POST /api/disconnect` | `{}` | `null` |
-| `POST /api/info` | `{}` | `{"name", "model", "firmware": [v0, v1]}` |
+| `POST /api/info` | `{}` | `{"name", "model", "firmware": [v0, v1]}` (`model` is `null` where it cannot be read) |
 | `POST /api/power` | `{"on"}` | acknowledged tag |
 | `POST /api/color` | `{"rgb", "brightness"}` | acknowledged tag |
 | `POST /api/scene` | `{"first", "second", "speed", "brightness", "reverse"}` | `null` |
@@ -90,8 +90,8 @@ clients run one at a time in arrival order, so send DIY pixels sequentially to k
 
 The app builds for Android 8.0 (API 26) and later, with Bluetooth through
 [blec](https://github.com/MnlPhlp/tauri-plugin-blec) instead of btleplug. It has the desktop
-app's commands except light info, which fails: the model string is a GATT descriptor, and blec
-cannot read descriptors on Android. Not yet tried against a light.
+app's commands. Light info shows firmware versions but no model string: the model is a GATT
+descriptor, and blec cannot read descriptors on Android. Not yet tried against a light.
 
 The first scan asks for the Nearby devices permission (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`). If
 it was denied before, scanning opens the app's settings page instead; allow Nearby devices there.

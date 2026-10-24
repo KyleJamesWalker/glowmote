@@ -84,7 +84,7 @@ impl Link {
             .await?)
     }
 
-    pub(crate) async fn read_model(&self) -> Result<String> {
+    pub(crate) async fn read_model(&self) -> Result<Option<String>> {
         let description = Uuid::from_u128(0x0000_2901_0000_1000_8000_0080_5f9b_34fb);
         let descriptor = self
             .write
@@ -93,9 +93,11 @@ impl Link {
             .find(|d| d.uuid == description)
             .context("no user description on the write characteristic")?;
         let raw = self.peripheral.read_descriptor(descriptor).await?;
-        Ok(String::from_utf8_lossy(&raw)
-            .trim_end_matches('\0')
-            .to_owned())
+        Ok(Some(
+            String::from_utf8_lossy(&raw)
+                .trim_end_matches('\0')
+                .to_owned(),
+        ))
     }
 
     pub(crate) async fn disconnect(self) -> Result<()> {
