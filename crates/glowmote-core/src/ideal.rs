@@ -59,6 +59,51 @@ pub fn solid_color(color: Rgb, brightness_pct: u8) -> Packet {
     tagged(b"SGLS", &[0x00, 0x00, 0x64, 0x50, r, g, b, r, g, b, 0x32])
 }
 
+/// Enters the DIY pixel editor, as the app does when its DIY page opens.
+pub fn diy_enter() -> Packet {
+    tagged(b"DEN", &[0])
+}
+
+/// Leaves the DIY editor. The app sends `unsaved = true` when the drawing has not been saved.
+pub fn diy_exit(unsaved: bool) -> Packet {
+    let mut p = tagged(b"DSTOP", &[unsaved as u8]);
+    p[0] = 5; // the length byte excludes the argument
+    p
+}
+
+/// Sets one LED (0-based) in DIY mode. Brightness is sent as-is, not by scaling the channels.
+pub fn diy_pixel(index: u16, color: Rgb, brightness_pct: u8) -> Packet {
+    dood(1, index, color, brightness_pct)
+}
+
+/// Sets every LED in DIY mode; the app sends the strip's LED count in place of a pixel index.
+pub fn diy_fill(led_count: u16, color: Rgb, brightness_pct: u8) -> Packet {
+    dood(0, led_count, color, brightness_pct)
+}
+
+fn dood(target: u8, index: u16, Rgb { r, g, b }: Rgb, brightness_pct: u8) -> Packet {
+    let [hi, lo] = index.to_be_bytes();
+    // mode 2 and speed 100 are the only values captured
+    let mut p = tagged(
+        b"DOOD",
+        &[
+            target,
+            hi,
+            lo,
+            0x02,
+            0x64,
+            r,
+            g,
+            b,
+            brightness_pct.min(100),
+            0,
+            0,
+        ],
+    );
+    p[0] = 0x0d; // the length byte excludes the two trailing zeros
+    p
+}
+
 fn scale(c: Rgb, pct: u8) -> Rgb {
     let ch = |v: u8| {
         if v == 0 {
@@ -133,11 +178,49 @@ mod tests {
     }
 
     #[test]
+    fn diy_pixels_match_capture() {
+        assert_eq!(
+            encrypt(&diy_pixel(0, Rgb::new(0xa5, 0x15, 0x15), 0x41)),
+            hex!("89875e93862614aca7f70d38702bff7b")
+        );
+        assert_eq!(
+            encrypt(&diy_pixel(179, Rgb::new(0xa5, 0, 0), 50)),
+            hex!("746a837fe5d1e12408d9e11f34df95a2")
+        );
+    }
+
+    #[test]
+    fn diy_fill_matches_capture() {
+        assert_eq!(
+            encrypt(&diy_fill(180, Rgb::new(0x56, 0xa5, 0x42), 50)),
+            hex!("dcdd7fe7cbf6235242153c019b839bb9")
+        );
+    }
+
+    #[test]
+    fn diy_enter_and_exit_match_capture() {
+        assert_eq!(
+            encrypt(&diy_enter()),
+            hex!("cbe9305dbde55cf3f8f13873f0920f2f")
+        );
+        assert_eq!(
+            encrypt(&diy_exit(true)),
+            hex!("5eb9c3c21f0457240f0c39e0d0953039")
+        );
+        assert_eq!(
+            encrypt(&diy_exit(false)),
+            hex!("5724de0f03efb16acbe078544cbc4ce1")
+        );
+    }
+
+    #[test]
     fn decrypts_acks() {
         let turn = decrypt(&hex!("e04875cfea0dc30d20e2a01dfb20c6b6"));
         let sgls = decrypt(&hex!("9377d9a5ce41387fbfc001984adabf47"));
+        let dood = decrypt(&hex!("f6104e6c6768a68fb3be40feeb5791d0"));
         assert_eq!(parse_ack(&turn), Some("TURN"));
         assert_eq!(parse_ack(&sgls), Some("SGLS"));
+        assert_eq!(parse_ack(&dood), Some("DOOD"));
     }
 
     #[test]
