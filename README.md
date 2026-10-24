@@ -58,6 +58,7 @@ For a bundled app, install the CLI (`cargo install tauri-cli --version "^2" --lo
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
 | `docs/captures/` | Decoded vendor-app captures backing the confirmed commands. |
 | `tools/parse_snoop.py` | Decodes an Android `btsnoop_hci.log` into ATT writes and notifications. |
+| `tools/ufw_tool.py` | Lists and decrypts JieLi `.ufw` firmware update images. |
 
 ## Safety
 

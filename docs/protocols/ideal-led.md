@@ -232,7 +232,7 @@ every file inside passes its stored CRC-16:
 | App area (`app.bin`, `cfg_tool.bin`, …) | every 32 B | `key ^ ((offset_from_area_start >> 2) & 0xffff)` |
 
 `key` is the vendor's 16-bit chip key, `0xdb62` in every image, found by brute force and
-confirmed by the `app.bin` CRC. `app.bin` loads at `0x01e00120` and is not compressed. JieLi
+confirmed by the `app.bin` CRC. `tools/ufw_tool.py list|extract` implements all of this. `app.bin` loads at `0x01e00120` and is not compressed. JieLi
 publishes an Apache-2.0 SDK for both chips:
 [Jieli-Tech/fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK).
 
