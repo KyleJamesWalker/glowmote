@@ -1,0 +1,476 @@
+08:04:36.475 conn=0x040 -> WRITE_REQ h=0x000e raw=0100
+08:04:36.649 conn=0x040 -> WRITE_REQ h=0x0085 raw=0100
+08:04:37.536 conn=0x040 -> READ_REQ  h=0x0007 raw=
+08:04:37.557 conn=0x040 <- READ_RSP  h=0x5254 raw=32343131523030332d303700
+08:04:37.589 conn=0x040 -> WRITE_CMD h=0x0082 raw=0067c6697351ff4aec29cdbaabf2fbe346
+08:04:37.617 conn=0x040 <- NOTIFY    h=0x0084 raw=01023a02126fa284879236e9da27ba0b8d
+08:04:37.859 conn=0x040 -> WRITE_CMD h=0x0082 raw=0270617373
+08:04:37.888 conn=0x040 <- NOTIFY    h=0x0084 raw=00f14f07aeaa049fb1e314ff67c629fecf
+08:04:38.128 conn=0x040 -> WRITE_CMD h=0x0082 raw=01367094e00eb997eaccfbee8d295e3f4f
+08:04:38.158 conn=0x040 <- NOTIFY    h=0x0084 raw=0270617373
+08:04:38.406 conn=0x040 -> WRITE_CMD h=0x0082 raw=fedcbac003000656ffffffff00ef
+08:04:38.418 conn=0x040 -> WRITE_CMD h=0x0006 raw=b7f8ad85115c2ad8d8a7692cae99270e
+                                 dec=15 54 49 4d 45 06 08 04 26 a5 5a a5 01 03 01 07  |.TIME...&.Z.....|
+08:04:38.428 conn=0x040 <- NOTIFY    h=0x0084 raw=fedcba0003003e00560200200501000000000902
+08:04:38.622 conn=0x040 -> WRITE_CMD h=0x0006 raw=263a91cc5f1bf003ce437b733478ada2
+                                 dec=03 56 45 00 00 00 00 00 00 00 00 00 00 00 00 00  |.VE.............|
+08:04:38.652 conn=0x040 <- NOTIFY    h=0x000d raw=46ab4f31aab2c94a189d69be3420fabc
+                                 dec=0d 56 30 32 34 2e 31 31 2e 30 33 2e 37 00 00 00  |.V024.11.03.7...|
+08:04:38.825 conn=0x040 -> WRITE_CMD h=0x0006 raw=d12e61ad95a00bd3c56bee6f9cb545fe
+                                 dec=03 56 45 01 00 00 00 00 00 00 00 00 00 00 00 00  |.VE.............|
+08:04:38.847 conn=0x040 <- NOTIFY    h=0x000d raw=28666480d835f1b014ca8ea867a606ab
+                                 dec=0d 56 31 32 34 2e 31 31 2e 36 36 2e 31 00 00 00  |.V124.11.66.1...|
+08:04:39.029 conn=0x040 -> WRITE_CMD h=0x0006 raw=f09fdd3db85536404337f6d5cfa73f62
+                                 dec=0e 43 54 01 01 00 00 b4 00 b4 00 00 00 00 00 00  |.CT.............|
+08:04:39.057 conn=0x040 <- NOTIFY    h=0x000d raw=6e5b8292990b789ad753506ab1d8d810
+                                 dec=09 43 4f 4e 4e 45 43 54 4f 4b 00 08 44 49 52 45  |.CONNECTOK..DIRE|
+08:04:43.215 conn=0x040 -> WRITE_CMD h=0x0006 raw=612074c06b15b5b0616f2569e669062c
+                                 dec=0a 4d 55 4c 54 07 00 64 05 02 1d 00 00 00 00 00  |.MULT..d........|
+08:04:43.242 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:04:43.246 conn=0x040 -> WRITE_CMD h=0x0009 raw=070049004905003a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:04:43.272 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:04:59.482 conn=0x040 -> WRITE_CMD h=0x0006 raw=bfbf30363ea06e9d4cd273ab51a4c18d
+                                 dec=0a 4d 55 4c 54 07 00 64 00 02 1d 00 00 00 00 00  |.MULT..d........|
+08:04:59.515 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:04:59.521 conn=0x040 -> WRITE_CMD h=0x0009 raw=070049004905003a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:04:59.545 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:05:04.142 conn=0x040 -> WRITE_CMD h=0x0006 raw=06f3bfd022da348a290820d32920a6e4
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 1d 00 00 00 00 00  |.MULT..dd.......|
+08:05:04.165 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:05:04.173 conn=0x040 -> WRITE_CMD h=0x0009 raw=070049004905003a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:05:04.195 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:05:12.935 conn=0x040 -> WRITE_CMD h=0x0006 raw=6b08ecb1ca431474080cfc8b66b0029c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 05 00 00 00 00 00  |.MULT..dd.......|
+08:05:12.970 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:05:12.979 conn=0x040 -> WRITE_CMD h=0x0009 raw=07000c000c01000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:05:13.002 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:05:16.829 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:05:16.855 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:05:16.865 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ff00ff1400cb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:05:16.885 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:05:39.719 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:05:39.745 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:05:39.751 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825001400cb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:05:39.775 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:05:44.296 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:05:44.321 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:05:44.329 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:05:44.351 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:06:21.616 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:06:21.639 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:06:21.647 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:06:21.669 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:06:30.329 conn=0x040 -> WRITE_CMD h=0x0006 raw=e1514035a53b33946c7e17ac01d336be
+                                 dec=0a 4d 55 4c 54 07 00 64 00 02 64 00 00 00 00 00  |.MULT..d..d.....|
+08:06:30.354 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:06:30.365 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:06:30.399 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:06:42.584 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:06:42.609 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:06:42.614 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:06:42.639 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:06:49.368 conn=0x040 -> WRITE_CMD h=0x0006 raw=6b08ecb1ca431474080cfc8b66b0029c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 05 00 00 00 00 00  |.MULT..dd.......|
+08:06:49.404 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:06:49.413 conn=0x040 -> WRITE_CMD h=0x0009 raw=07000c0100040c07000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:06:49.434 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:06:57.189 conn=0x040 -> WRITE_CMD h=0x0006 raw=d2b8ec8a2b696c1529a5f3a2def2d128
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 06 00 00 00 00 00  |.MULT..dd.......|
+08:06:57.219 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:06:57.226 conn=0x040 -> WRITE_CMD h=0x0009 raw=07000e0200050f08000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:06:57.249 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:07:00.589 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:07:00.625 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:07:00.633 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700f825005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:07:00.654 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:07:10.630 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:07:10.660 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:07:10.682 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d005cff90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:07:10.705 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:07:22.502 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:07:22.525 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:07:22.532 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:07:22.555 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:07:30.331 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:07:30.355 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:07:30.364 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:07:30.400 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:07:49.975 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:07:50.006 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:07:50.012 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:07:50.035 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:09.501 conn=0x040 -> WRITE_CMD h=0x0006 raw=ca57d5725c345d7a7a1a9ebd81c318f9
+                                 dec=0a 4d 55 4c 54 07 01 64 00 02 64 00 00 00 00 00  |.MULT..d..d.....|
+08:08:09.533 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:09.540 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:09.563 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:16.284 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:08:16.329 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:16.338 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:16.359 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:20.860 conn=0x040 -> WRITE_CMD h=0x0006 raw=a5102bab1a9c52bb1ebb8194688fc07e
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 05 00 00 00 00 00  |.MULT..dd.......|
+08:08:20.889 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:20.894 conn=0x040 -> WRITE_CMD h=0x0009 raw=07000b000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:20.918 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:23.826 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:08:23.873 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:23.881 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ed0d000e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:23.904 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:29.639 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:08:29.663 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:29.669 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ffffff0e00f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:29.708 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:33.035 conn=0x040 -> WRITE_CMD h=0x0006 raw=c8d3bced6b94ddee42f40213ea1866ce
+                                 dec=0a 4d 55 4c 54 07 01 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:08:33.068 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:33.077 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ffffffa60029000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:33.099 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:08:37.002 conn=0x040 -> WRITE_CMD h=0x0006 raw=29d3a784888e6dcd9baaccee9809a18c
+                                 dec=0a 4d 55 4c 54 07 00 64 64 02 64 00 00 00 00 00  |.MULT..dd.d.....|
+08:08:37.028 conn=0x040 <- NOTIFY    h=0x000d raw=c68ed93a891110cab5c8067f843d04e6
+                                 dec=06 4d 55 4c 54 4f 4b 00 07 53 50 4c 41 59 4f 4b  |.MULTOK..SPLAYOK|
+08:08:37.038 conn=0x040 -> WRITE_CMD h=0x0009 raw=0700ffffffa60029000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+08:08:37.058 conn=0x040 <- NOTIFY    h=0x000d raw=33e943ec5a7cfc5975cdaae497bf25f2
+                                 dec=08 4d 55 4c 54 43 50 4f 4b 00 08 53 47 4c 53 43  |.MULTCPOK..SGLSC|
+08:09:10.760 conn=0x040 -> WRITE_CMD h=0x0006 raw=cbe9305dbde55cf3f8f13873f0920f2f
+                                 dec=04 44 45 4e 00 00 00 00 00 00 00 00 00 00 00 00  |.DEN............|
+08:10:15.758 conn=0x040 -> WRITE_CMD h=0x0006 raw=89875e93862614aca7f70d38702bff7b
+                                 dec=0d 44 4f 4f 44 01 00 00 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:15.787 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:10:25.108 conn=0x040 -> WRITE_CMD h=0x0006 raw=6d9e32cf6ee72275f0e81a2d5160dff4
+                                 dec=0d 44 4f 4f 44 01 00 01 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:25.132 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:10:25.907 conn=0x040 -> WRITE_CMD h=0x0006 raw=bca807777371eb908f17a0fb0fc30113
+                                 dec=0d 44 4f 4f 44 01 00 02 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:25.942 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:10:26.755 conn=0x040 -> WRITE_CMD h=0x0006 raw=d7b8f0f305615e273fe5940a46f36d70
+                                 dec=0d 44 4f 4f 44 01 00 03 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:26.783 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:10:27.684 conn=0x040 -> WRITE_CMD h=0x0006 raw=b9bf5dfdbb259c08b62fdfdf23a28813
+                                 dec=0d 44 4f 4f 44 01 00 04 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:27.712 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:10:28.535 conn=0x040 -> WRITE_CMD h=0x0006 raw=d8ab3caa1d6c61df14d2df8e53feb4a4
+                                 dec=0d 44 4f 4f 44 01 00 05 02 64 a5 15 15 41 00 00  |.DOOD....d...A..|
+08:10:28.568 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:00.639 conn=0x040 -> WRITE_CMD h=0x0006 raw=5cf88324190246bb8d52c3347606b1d4
+                                 dec=0d 44 4f 4f 44 01 00 06 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:00.683 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:01.420 conn=0x040 -> WRITE_CMD h=0x0006 raw=b1a0042a52b920391d0936f0a274b9f8
+                                 dec=0d 44 4f 4f 44 01 00 07 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:01.449 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:01.998 conn=0x040 -> WRITE_CMD h=0x0006 raw=e79e8de930632013061b05852649677c
+                                 dec=0d 44 4f 4f 44 01 00 08 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:02.032 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:02.725 conn=0x040 -> WRITE_CMD h=0x0006 raw=807f938da604ceb52b889bc4d1e32c8a
+                                 dec=0d 44 4f 4f 44 01 00 09 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:02.752 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:04.580 conn=0x040 -> WRITE_CMD h=0x0006 raw=dbf42b2359e5cbff9e8edcf82079b9c1
+                                 dec=0d 44 4f 4f 44 01 00 0a 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:04.614 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:05.109 conn=0x040 -> WRITE_CMD h=0x0006 raw=88f1dcb3202f90081d29302e3d40cef5
+                                 dec=0d 44 4f 4f 44 01 00 0b 02 64 41 6f a5 41 00 00  |.DOOD....dAo.A..|
+08:11:05.138 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.264 conn=0x040 -> WRITE_CMD h=0x0006 raw=9ae89babb21760639de0f29bfada0c0e
+                                 dec=0d 44 4f 4f 44 01 00 60 02 64 a5 56 a4 41 00 00  |.DOOD..`.d.V.A..|
+08:11:19.298 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.349 conn=0x040 -> WRITE_CMD h=0x0006 raw=9c535767a916957381634ff4b6dfcc22
+                                 dec=0d 44 4f 4f 44 01 00 53 02 64 a5 56 a4 41 00 00  |.DOOD..S.d.V.A..|
+08:11:19.373 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.414 conn=0x040 -> WRITE_CMD h=0x0006 raw=f5a235119917e30ec2ddc0200bda4217
+                                 dec=0d 44 4f 4f 44 01 00 4c 02 64 a5 56 a4 41 00 00  |.DOOD..L.d.V.A..|
+08:11:19.448 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.479 conn=0x040 -> WRITE_CMD h=0x0006 raw=d414cc06a50e33824a765e3da69131bf
+                                 dec=0d 44 4f 4f 44 01 00 3e 02 64 a5 56 a4 41 00 00  |.DOOD..>.d.V.A..|
+08:11:19.508 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.552 conn=0x040 -> WRITE_CMD h=0x0006 raw=d78ecbd05fc48e0f89d2a54b2d487566
+                                 dec=0d 44 4f 4f 44 01 00 39 02 64 a5 56 a4 41 00 00  |.DOOD..9.d.V.A..|
+08:11:19.583 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.611 conn=0x040 -> WRITE_CMD h=0x0006 raw=9f21cd2fcee0b8cf294b52bf71d3c3a6
+                                 dec=0d 44 4f 4f 44 01 00 2a 02 64 a5 56 a4 41 00 00  |.DOOD..*.d.V.A..|
+08:11:19.643 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:19.697 conn=0x040 -> WRITE_CMD h=0x0006 raw=6ec13881d7a15ed90b9f0076bc71f0fd
+                                 dec=0d 44 4f 4f 44 01 00 25 02 64 a5 56 a4 41 00 00  |.DOOD..%.d.V.A..|
+08:11:19.734 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.121 conn=0x040 -> WRITE_CMD h=0x0006 raw=f428f765088a9188821128e6344c76fd
+                                 dec=0d 44 4f 4f 44 01 00 26 02 64 a5 56 a4 41 00 00  |.DOOD..&.d.V.A..|
+08:11:20.153 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.211 conn=0x040 -> WRITE_CMD h=0x0006 raw=e802d90a62a99f00d38c9bd1fd787b9c
+                                 dec=0d 44 4f 4f 44 01 00 29 02 64 a5 56 a4 41 00 00  |.DOOD..).d.V.A..|
+08:11:20.243 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.279 conn=0x040 -> WRITE_CMD h=0x0006 raw=d1d669e4d3e85842965ac91f2ac25816
+                                 dec=0d 44 4f 4f 44 01 00 3b 02 64 a5 56 a4 41 00 00  |.DOOD..;.d.V.A..|
+08:11:20.303 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.348 conn=0x040 -> WRITE_CMD h=0x0006 raw=84de2eb8485a02472b590714879a274c
+                                 dec=0d 44 4f 4f 44 01 00 3d 02 64 a5 56 a4 41 00 00  |.DOOD..=.d.V.A..|
+08:11:20.378 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.409 conn=0x040 -> WRITE_CMD h=0x0006 raw=453285d0585c7ef14681d221cd778094
+                                 dec=0d 44 4f 4f 44 01 00 38 02 64 a5 56 a4 41 00 00  |.DOOD..8.d.V.A..|
+08:11:20.438 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.480 conn=0x040 -> WRITE_CMD h=0x0006 raw=a81fab602333f690605fcf6298f8dae4
+                                 dec=0d 44 4f 4f 44 01 00 36 02 64 a5 56 a4 41 00 00  |.DOOD..6.d.V.A..|
+08:11:20.513 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.543 conn=0x040 -> WRITE_CMD h=0x0006 raw=219b83aa345b85838774a327fcf60dd1
+                                 dec=0d 44 4f 4f 44 01 00 48 02 64 a5 56 a4 41 00 00  |.DOOD..H.d.V.A..|
+08:11:20.573 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.610 conn=0x040 -> WRITE_CMD h=0x0006 raw=231b2fd87b3c7b5a13ea7c6053369194
+                                 dec=0d 44 4f 4f 44 01 00 6a 02 64 a5 56 a4 41 00 00  |.DOOD..j.d.V.A..|
+08:11:20.633 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.678 conn=0x040 -> WRITE_CMD h=0x0006 raw=7adfcb35f0e4f0edb7096fb76b4ff022
+                                 dec=0d 44 4f 4f 44 01 00 67 02 64 a5 56 a4 41 00 00  |.DOOD..g.d.V.A..|
+08:11:20.708 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.745 conn=0x040 -> WRITE_CMD h=0x0006 raw=8b1fbf91753cb93c7344b128ac33ebb7
+                                 dec=0d 44 4f 4f 44 01 00 52 02 64 a5 56 a4 41 00 00  |.DOOD..R.d.V.A..|
+08:11:20.768 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.846 conn=0x040 -> WRITE_CMD h=0x0006 raw=114684374d5db710082d11e8c340f079
+                                 dec=0d 44 4f 4f 44 01 00 2b 02 64 a5 56 a4 41 00 00  |.DOOD..+.d.V.A..|
+08:11:20.873 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.911 conn=0x040 -> WRITE_CMD h=0x0006 raw=61b9a3ab3ad5383a098dd89ea9b5ad58
+                                 dec=0d 44 4f 4f 44 01 00 2e 02 64 a5 56 a4 41 00 00  |.DOOD....d.V.A..|
+08:11:20.933 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:20.978 conn=0x040 -> WRITE_CMD h=0x0006 raw=0903673d9297992f12be315e6a327956
+                                 dec=0d 44 4f 4f 44 01 00 2f 02 64 a5 56 a4 41 00 00  |.DOOD../.d.V.A..|
+08:11:21.008 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.044 conn=0x040 -> WRITE_CMD h=0x0006 raw=ec6d002443a6bf12b2be4d2dbdcb8eec
+                                 dec=0d 44 4f 4f 44 01 00 35 02 64 a5 56 a4 41 00 00  |.DOOD..5.d.V.A..|
+08:11:21.068 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.113 conn=0x040 -> WRITE_CMD h=0x0006 raw=6077a0540951a4362373297c6c23345e
+                                 dec=0d 44 4f 4f 44 01 00 41 02 64 a5 56 a4 41 00 00  |.DOOD..A.d.V.A..|
+08:11:21.143 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.177 conn=0x040 -> WRITE_CMD h=0x0006 raw=0e37aa9cd0ac5cb65dfe9efc4f0192f1
+                                 dec=0d 44 4f 4f 44 01 00 55 02 64 a5 56 a4 41 00 00  |.DOOD..U.d.V.A..|
+08:11:21.203 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.242 conn=0x040 -> WRITE_CMD h=0x0006 raw=65c84725eea791ded3a30002c3d0e3de
+                                 dec=0d 44 4f 4f 44 01 00 5e 02 64 a5 56 a4 41 00 00  |.DOOD..^.d.V.A..|
+08:11:21.263 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.368 conn=0x040 -> WRITE_CMD h=0x0006 raw=14a7178b7cb8ca6b105d4cf4f17fe65e
+                                 dec=0d 44 4f 4f 44 01 00 68 02 64 a5 56 a4 41 00 00  |.DOOD..h.d.V.A..|
+08:11:21.398 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.445 conn=0x040 -> WRITE_CMD h=0x0006 raw=1d21c5bd97a03d454fc4a86b98e14923
+                                 dec=0d 44 4f 4f 44 01 00 69 02 64 a5 56 a4 41 00 00  |.DOOD..i.d.V.A..|
+08:11:21.473 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.514 conn=0x040 -> WRITE_CMD h=0x0006 raw=39b72cccb17bd27e4011f3265308f93d
+                                 dec=0d 44 4f 4f 44 01 00 5d 02 64 a5 56 a4 41 00 00  |.DOOD..].d.V.A..|
+08:11:21.548 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.580 conn=0x040 -> WRITE_CMD h=0x0006 raw=71bf5b802bb81c498b13ad1adeac7ed0
+                                 dec=0d 44 4f 4f 44 01 00 5b 02 64 a5 56 a4 41 00 00  |.DOOD..[.d.V.A..|
+08:11:21.608 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.653 conn=0x040 -> WRITE_CMD h=0x0006 raw=a9fd719762de5ced570ee4319a5d7d6d
+                                 dec=0d 44 4f 4f 44 01 00 5c 02 64 a5 56 a4 41 00 00  |.DOOD..\.d.V.A..|
+08:11:21.683 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.803 conn=0x040 -> WRITE_CMD h=0x0006 raw=1bce6974915f6f04c6f4468b994d2f24
+                                 dec=0d 44 4f 4f 44 01 00 56 02 64 a5 56 a4 41 00 00  |.DOOD..V.d.V.A..|
+08:11:21.833 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.877 conn=0x040 -> WRITE_CMD h=0x0006 raw=3afd81ed5c3355aac0a5d08f8a5b8ba5
+                                 dec=0d 44 4f 4f 44 01 00 43 02 64 a5 56 a4 41 00 00  |.DOOD..C.d.V.A..|
+08:11:21.908 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:21.952 conn=0x040 -> WRITE_CMD h=0x0006 raw=162a7a0c2ccbee24f6c56f935573f081
+                                 dec=0d 44 4f 4f 44 01 00 21 02 64 a5 56 a4 41 00 00  |.DOOD..!.d.V.A..|
+08:11:21.983 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.035 conn=0x040 -> WRITE_CMD h=0x0006 raw=7eeec6d1f42ea8a11e4e2167593278d7
+                                 dec=0d 44 4f 4f 44 01 00 22 02 64 a5 56 a4 41 00 00  |.DOOD..".d.V.A..|
+08:11:22.058 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.102 conn=0x040 -> WRITE_CMD h=0x0006 raw=f2e5234dc2b1fc46af7382e201470ac0
+                                 dec=0d 44 4f 4f 44 01 00 23 02 64 a5 56 a4 41 00 00  |.DOOD..#.d.V.A..|
+08:11:22.133 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.166 conn=0x040 -> WRITE_CMD h=0x0006 raw=c04d8f5bbd1ad87b3e799b9267d2e395
+                                 dec=0d 44 4f 4f 44 01 00 2c 02 64 a5 56 a4 41 00 00  |.DOOD..,.d.V.A..|
+08:11:22.193 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.236 conn=0x040 -> WRITE_CMD h=0x0006 raw=d725853bdd10e7c059afacd9050bf1d2
+                                 dec=0d 44 4f 4f 44 01 00 2d 02 64 a5 56 a4 41 00 00  |.DOOD..-.d.V.A..|
+08:11:22.268 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.305 conn=0x040 -> WRITE_CMD h=0x0006 raw=5629a8b4c6586427df428d72b7a3adf6
+                                 dec=0d 44 4f 4f 44 01 00 34 02 64 a5 56 a4 41 00 00  |.DOOD..4.d.V.A..|
+08:11:22.328 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.368 conn=0x040 -> WRITE_CMD h=0x0006 raw=e433071012ec102121d08255b0103b28
+                                 dec=0d 44 4f 4f 44 01 00 45 02 64 a5 56 a4 41 00 00  |.DOOD..E.d.V.A..|
+08:11:22.388 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.435 conn=0x040 -> WRITE_CMD h=0x0006 raw=a4909ed13d5484979e2e3ec2eb462b46
+                                 dec=0d 44 4f 4f 44 01 00 47 02 64 a5 56 a4 41 00 00  |.DOOD..G.d.V.A..|
+08:11:22.463 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.502 conn=0x040 -> WRITE_CMD h=0x0006 raw=8c5c812a73c0530cbdc2e418bd1e2f95
+                                 dec=0d 44 4f 4f 44 01 00 4a 02 64 a5 56 a4 41 00 00  |.DOOD..J.d.V.A..|
+08:11:22.523 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.691 conn=0x040 -> WRITE_CMD h=0x0006 raw=c10604cd06d43b94d945b79640acec13
+                                 dec=0d 44 4f 4f 44 01 00 5f 02 64 a5 56 a4 41 00 00  |.DOOD.._.d.V.A..|
+08:11:22.718 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.776 conn=0x040 -> WRITE_CMD h=0x0006 raw=e23295f43ff42719325a3d2fa52b2f65
+                                 dec=0d 44 4f 4f 44 01 00 66 02 64 a5 56 a4 41 00 00  |.DOOD..f.d.V.A..|
+08:11:22.808 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.846 conn=0x040 -> WRITE_CMD h=0x0006 raw=21e88d96aa3783ffe0d5d311174cf94f
+                                 dec=0d 44 4f 4f 44 01 00 65 02 64 a5 56 a4 41 00 00  |.DOOD..e.d.V.A..|
+08:11:22.868 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:22.976 conn=0x040 -> WRITE_CMD h=0x0006 raw=cbf61ad9cbc600854f5abea6c8bbf6bc
+                                 dec=0d 44 4f 4f 44 01 00 64 02 64 a5 56 a4 41 00 00  |.DOOD..d.d.V.A..|
+08:11:23.003 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:23.101 conn=0x040 -> WRITE_CMD h=0x0006 raw=499a2674a39a0f764ca0898f4670f981
+                                 dec=0d 44 4f 4f 44 01 00 62 02 64 a5 56 a4 41 00 00  |.DOOD..b.d.V.A..|
+08:11:23.123 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:23.172 conn=0x040 -> WRITE_CMD h=0x0006 raw=6ed76d422543d49d290a8f948d577688
+                                 dec=0d 44 4f 4f 44 01 00 51 02 64 a5 56 a4 41 00 00  |.DOOD..Q.d.V.A..|
+08:11:23.198 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:11:23.234 conn=0x040 -> WRITE_CMD h=0x0006 raw=deba47baf576cfb42976286211e2b158
+                                 dec=0d 44 4f 4f 44 01 00 4e 02 64 a5 56 a4 41 00 00  |.DOOD..N.d.V.A..|
+08:11:23.258 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:05.674 conn=0x040 -> WRITE_CMD h=0x0006 raw=d0c768b32edeab6430b09cc0cd543248
+                                 dec=0d 44 4f 4f 44 01 00 b3 02 64 56 a5 42 41 00 00  |.DOOD....dV.BA..|
+08:12:05.708 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:06.136 conn=0x040 -> WRITE_CMD h=0x0006 raw=966353955385e380d9815931bd6c3649
+                                 dec=0d 44 4f 4f 44 01 00 b2 02 64 56 a5 42 41 00 00  |.DOOD....dV.BA..|
+08:12:06.158 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:06.680 conn=0x040 -> WRITE_CMD h=0x0006 raw=7ff84558eb62dbfe9fc4746f5c96a3d7
+                                 dec=0d 44 4f 4f 44 01 00 b1 02 64 56 a5 42 41 00 00  |.DOOD....dV.BA..|
+08:12:06.714 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:21.414 conn=0x040 -> WRITE_CMD h=0x0006 raw=5eb9c3c21f0457240f0c39e0d0953039
+                                 dec=05 44 53 54 4f 50 01 00 00 00 00 00 00 00 00 00  |.DSTOP..........|
+08:12:22.655 conn=0x040 -> WRITE_CMD h=0x0006 raw=cbe9305dbde55cf3f8f13873f0920f2f
+                                 dec=04 44 45 4e 00 00 00 00 00 00 00 00 00 00 00 00  |.DEN............|
+08:12:24.088 conn=0x040 -> WRITE_CMD h=0x0006 raw=5724de0f03efb16acbe078544cbc4ce1
+                                 dec=05 44 53 54 4f 50 00 00 00 00 00 00 00 00 00 00  |.DSTOP..........|
+08:12:34.965 conn=0x040 -> WRITE_CMD h=0x0006 raw=cbe9305dbde55cf3f8f13873f0920f2f
+                                 dec=04 44 45 4e 00 00 00 00 00 00 00 00 00 00 00 00  |.DEN............|
+08:12:59.187 conn=0x040 -> WRITE_CMD h=0x0006 raw=dcdd7fe7cbf6235242153c019b839bb9
+                                 dec=0d 44 4f 4f 44 00 00 b4 02 64 56 a5 42 32 00 00  |.DOOD....dV.B2..|
+08:12:59.192 conn=0x040 -> WRITE_CMD h=0x0006 raw=dcdd7fe7cbf6235242153c019b839bb9
+                                 dec=0d 44 4f 4f 44 00 00 b4 02 64 56 a5 42 32 00 00  |.DOOD....dV.B2..|
+08:12:59.210 conn=0x040 -> WRITE_CMD h=0x0006 raw=dcdd7fe7cbf6235242153c019b839bb9
+                                 dec=0d 44 4f 4f 44 00 00 b4 02 64 56 a5 42 32 00 00  |.DOOD....dV.B2..|
+08:12:59.214 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:59.215 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:12:59.244 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:13:34.243 conn=0x040 -> WRITE_CMD h=0x0006 raw=9750e3cfbb267aac05ae3f197309d2ea
+                                 dec=0d 44 4f 4f 44 01 00 9f 02 64 a5 00 00 32 00 00  |.DOOD....d...2..|
+08:13:34.270 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:13:46.518 conn=0x040 -> WRITE_CMD h=0x0006 raw=a04aab9d503255c30773fec5545bd022
+                                 dec=0d 44 4f 4f 44 01 00 00 02 64 a5 00 00 32 00 00  |.DOOD....d...2..|
+08:13:46.539 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
+08:13:52.242 conn=0x040 -> WRITE_CMD h=0x0006 raw=746a837fe5d1e12408d9e11f34df95a2
+                                 dec=0d 44 4f 4f 44 01 00 b3 02 64 a5 00 00 32 00 00  |.DOOD....d...2..|
+08:13:52.270 conn=0x040 <- NOTIFY    h=0x000d raw=f6104e6c6768a68fb3be40feeb5791d0
+                                 dec=06 44 4f 4f 44 4f 4b 00 08 53 50 4c 41 43 50 4f  |.DOODOK..SPLACPO|
