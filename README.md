@@ -17,6 +17,14 @@ cargo run -p glowmote -- color ff0000 --brightness 50
 cargo run -p glowmote -- --device ISP-50542B off
 ```
 
+Each command above opens its own connection, and the lights blink 3 times on every connection.
+`shell` connects once and reads commands from stdin, one per line, typed or piped:
+
+```sh
+cargo run -p glowmote -- shell
+printf 'on\ncolor 00ff00\nquit\n' | cargo run -p glowmote -- shell
+```
+
 On macOS the first run asks for Bluetooth permission for your terminal.
 
 ## Layout
@@ -24,7 +32,8 @@ On macOS the first run asks for Bluetooth permission for your terminal.
 | Path | Contents |
 |---|---|
 | `crates/glowmote-core` | Protocol encoders, pure bytes, no I/O. Tests use captured packets. |
-| `crates/glowmote-cli` | `glowmote` binary: BLE scanning and sending via [btleplug](https://github.com/deviceplug/btleplug). |
+| `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug): scanning and a connection that stays open across commands. |
+| `crates/glowmote-cli` | `glowmote` binary: one-shot commands, `shell` and `probe`. |
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
 | `docs/captures/` | Decoded vendor-app captures backing the confirmed commands. |
 | `tools/parse_snoop.py` | Decodes an Android `btsnoop_hci.log` into ATT writes and notifications. |

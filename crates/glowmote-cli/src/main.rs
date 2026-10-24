@@ -1,12 +1,12 @@
+use std::io::{IsTerminal, Write as _};
 use std::time::Duration;
 
-use anyhow::{Context, Result, bail};
-use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
-use btleplug::platform::{Manager, Peripheral};
+use anyhow::{Context, Result};
+use btleplug::api::{Peripheral as _, WriteType};
 use clap::{Parser, Subcommand};
-use futures::StreamExt;
+use glowmote_ble::{Found, Light, characteristic, pick, scan};
 use glowmote_core::{Rgb, ideal};
-use uuid::Uuid;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 #[derive(Parser)]
 #[command(version, about = "One remote for all your LED lights")]
@@ -27,6 +27,20 @@ struct Cli {
 enum Command {
     /// List supported lights in range
     Scan,
+    /// Connect once and read commands from stdin, one per line
+    Shell,
+    /// Step slowly through connect, subscribe, send `on`, disconnect, to see which step blinks
+    Probe {
+        /// Seconds to wait between steps
+        #[arg(long, default_value_t = 5)]
+        pause_secs: u64,
+    },
+    #[command(flatten)]
+    Action(Action),
+}
+
+#[derive(Subcommand)]
+enum Action {
     On,
     Off,
     /// Set a solid color
@@ -37,12 +51,32 @@ enum Command {
         #[arg(short, long, default_value_t = 100, value_parser = clap::value_parser!(u8).range(0..=100))]
         brightness: u8,
     },
-    /// Step slowly through connect, subscribe, send `on`, disconnect, to see which step blinks
-    Probe {
-        /// Seconds to wait between steps
-        #[arg(long, default_value_t = 5)]
-        pause_secs: u64,
-    },
+}
+
+impl Action {
+    fn packet(&self) -> ideal::Packet {
+        match *self {
+            Action::On => ideal::power(true),
+            Action::Off => ideal::power(false),
+            Action::Color { rgb, brightness } => ideal::solid_color(rgb, brightness),
+        }
+    }
+}
+
+#[derive(Parser)]
+#[command(no_binary_name = true, disable_version_flag = true)]
+struct ShellLine {
+    #[command(subcommand)]
+    command: ShellCommand,
+}
+
+#[derive(Subcommand)]
+enum ShellCommand {
+    #[command(flatten)]
+    Action(Action),
+    /// Disconnect and exit
+    #[command(alias = "exit")]
+    Quit,
 }
 
 #[tokio::main]
@@ -50,78 +84,75 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let found = scan(Duration::from_secs(cli.scan_secs)).await?;
 
-    let packet = match cli.command {
-        Command::Scan => {
-            if found.is_empty() {
-                println!(
-                    "no supported lights found (close the vendor app; it holds the connection)"
-                );
-            }
-            for (name, _) in &found {
-                println!("{name}");
-            }
-            return Ok(());
+    if let Command::Scan = cli.command {
+        if found.is_empty() {
+            println!("no supported lights found (close the vendor app; it holds the connection)");
         }
-        Command::Probe { pause_secs } => {
-            let (name, light) = pick(found, cli.device.as_deref())?;
-            return probe(&light, Duration::from_secs(pause_secs))
-                .await
-                .with_context(|| format!("probing {name}"));
+        for f in &found {
+            println!("{}", f.name);
         }
-        Command::On => ideal::power(true),
-        Command::Off => ideal::power(false),
-        Command::Color { rgb, brightness } => ideal::solid_color(rgb, brightness),
-    };
+        return Ok(());
+    }
 
-    let (name, light) = pick(found, cli.device.as_deref())?;
-    send(&light, &packet)
-        .await
-        .with_context(|| format!("sending to {name}"))
-}
-
-async fn scan(duration: Duration) -> Result<Vec<(String, Peripheral)>> {
-    let manager = Manager::new().await?;
-    let adapter = manager
-        .adapters()
-        .await?
-        .into_iter()
-        .next()
-        .context("no Bluetooth adapter")?;
-    adapter.start_scan(ScanFilter::default()).await?;
-    tokio::time::sleep(duration).await;
-    adapter.stop_scan().await?;
-
-    let mut found = Vec::new();
-    for p in adapter.peripherals().await? {
-        if let Some(name) = p.properties().await?.and_then(|props| props.local_name)
-            && ideal::is_ideal_name(&name)
-        {
-            found.push((name, p));
+    let light = pick(found, cli.device.as_deref())?;
+    let name = light.name.clone();
+    match cli.command {
+        Command::Scan => unreachable!(),
+        Command::Shell => shell(light).await,
+        Command::Probe { pause_secs } => probe(light, Duration::from_secs(pause_secs)).await,
+        Command::Action(action) => {
+            let mut light = Light::connect(light).await?;
+            report(light.send(&action.packet()).await?);
+            light.disconnect().await
         }
     }
-    found.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(found)
+    .with_context(|| format!("talking to {name}"))
 }
 
-fn pick(found: Vec<(String, Peripheral)>, wanted: Option<&str>) -> Result<(String, Peripheral)> {
-    let mut matches: Vec<_> = found
-        .into_iter()
-        .filter(|(name, _)| wanted.is_none_or(|w| name.starts_with(w)))
-        .collect();
-    match matches.len() {
-        0 => bail!("no matching light found (close the vendor app; it holds the connection)"),
-        1 => Ok(matches.remove(0)),
-        _ => {
-            let names: Vec<_> = matches.iter().map(|(n, _)| n.as_str()).collect();
-            bail!(
-                "several lights match, pick one with --device: {}",
-                names.join(", ")
-            )
-        }
+fn report(ack: Option<String>) {
+    match ack {
+        Some(tag) => println!("ok ({tag})"),
+        None => println!("sent, but no acknowledgement within 2s"),
     }
 }
 
-async fn probe(light: &Peripheral, pause: Duration) -> Result<()> {
+async fn shell(found: Found) -> Result<()> {
+    let interactive = std::io::stdin().is_terminal();
+    let mut light = Light::connect(found).await?;
+    if interactive {
+        println!("connected to {}; type help for commands", light.name);
+    }
+
+    let mut lines = BufReader::new(tokio::io::stdin()).lines();
+    loop {
+        if interactive {
+            print!("> ");
+            std::io::stdout().flush()?;
+        }
+        let Some(line) = lines.next_line().await? else {
+            break;
+        };
+        if line.trim().is_empty() {
+            continue;
+        }
+        match ShellLine::try_parse_from(line.split_whitespace()) {
+            Ok(ShellLine {
+                command: ShellCommand::Quit,
+            }) => break,
+            Ok(ShellLine {
+                command: ShellCommand::Action(action),
+            }) => match light.send(&action.packet()).await {
+                Ok(ack) => report(ack),
+                Err(e) => println!("error: {e:#}"),
+            },
+            Err(e) => print!("{e}"),
+        }
+    }
+    light.disconnect().await
+}
+
+async fn probe(found: Found, pause: Duration) -> Result<()> {
+    let light = found.peripheral;
     let start = std::time::Instant::now();
     let step = |label: &str| println!("{:>5.1}s  {label}", start.elapsed().as_secs_f32());
 
@@ -131,21 +162,14 @@ async fn probe(light: &Peripheral, pause: Duration) -> Result<()> {
     step("connected");
     tokio::time::sleep(pause).await;
 
-    let notify = light
-        .characteristics()
-        .into_iter()
-        .find(|c| c.uuid == Uuid::parse_str(ideal::NOTIFY_CHAR_UUID).expect("valid UUID constant"))
-        .context("notify characteristic not found")?;
     step("subscribing");
-    light.subscribe(&notify).await?;
+    light
+        .subscribe(&characteristic(&light, ideal::NOTIFY_CHAR_UUID)?)
+        .await?;
     tokio::time::sleep(pause).await;
 
-    let write = light
-        .characteristics()
-        .into_iter()
-        .find(|c| c.uuid == Uuid::parse_str(ideal::WRITE_CHAR_UUID).expect("valid UUID constant"))
-        .context("write characteristic not found")?;
     step("sending on");
+    let write = characteristic(&light, ideal::WRITE_CHAR_UUID)?;
     light
         .write(
             &write,
@@ -159,40 +183,5 @@ async fn probe(light: &Peripheral, pause: Duration) -> Result<()> {
     light.disconnect().await?;
     tokio::time::sleep(pause).await;
     step("done");
-    Ok(())
-}
-
-async fn send(light: &Peripheral, plain: &ideal::Packet) -> Result<()> {
-    light.connect().await?;
-    light.discover_services().await?;
-    let chars = light.characteristics();
-    let find = |uuid: &str| {
-        let uuid = Uuid::parse_str(uuid).expect("valid UUID constant");
-        chars.iter().find(|c| c.uuid == uuid).cloned()
-    };
-    let write = find(ideal::WRITE_CHAR_UUID).context("write characteristic not found")?;
-    let notify = find(ideal::NOTIFY_CHAR_UUID).context("notify characteristic not found")?;
-
-    light.subscribe(&notify).await?;
-    let mut notifications = light.notifications().await?;
-    light
-        .write(&write, &ideal::encrypt(plain), WriteType::WithoutResponse)
-        .await?;
-
-    let ack = tokio::time::timeout(Duration::from_secs(2), async {
-        while let Some(n) = notifications.next().await {
-            if let Ok(block) = <ideal::Packet>::try_from(n.value.as_slice()) {
-                return ideal::parse_ack(&ideal::decrypt(&block)).map(str::to_owned);
-            }
-        }
-        None
-    })
-    .await;
-    light.disconnect().await?;
-
-    match ack {
-        Ok(Some(cmd)) => println!("ok ({cmd})"),
-        _ => println!("sent, but no acknowledgement within 2s"),
-    }
     Ok(())
 }
