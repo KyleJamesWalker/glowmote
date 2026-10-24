@@ -1,6 +1,8 @@
 //! HTTP front end for [`Controller`]: `POST /api/<command>` with the desktop app's arguments as
 //! JSON, plus the app's UI with a shim that routes its Tauri calls here.
 
+pub mod actions;
+
 use std::sync::{Arc, LazyLock};
 
 use axum::extract::{FromRequest, Request, State};
@@ -52,6 +54,11 @@ pub fn router<R: Radio>(controller: Arc<Controller<R>>) -> Router {
         .method_not_allowed_fallback(method_not_allowed)
         .fallback(get(static_file))
         .with_state(controller)
+}
+
+/// The command API plus named actions.
+pub fn app<R: Radio>(controller: Arc<Controller<R>>, actions: Arc<actions::Actions<R>>) -> Router {
+    router(controller).merge(actions::router(actions))
 }
 
 pub struct ApiError(StatusCode, String);
@@ -458,5 +465,34 @@ mod tests {
             assert_eq!(got, status, "{body:?}");
             assert!(value["error"].is_string(), "{body:?}");
         }
+    }
+
+    #[tokio::test]
+    async fn serves_named_actions() {
+        let controller = Arc::new(Controller::with_radio(FakeRadio, Duration::ZERO));
+        let defs = actions::parse(r#"{"flash": [{"power": true}]}"#).unwrap();
+        let app = crate::app(
+            controller.clone(),
+            Arc::new(actions::Actions::new(controller, defs)),
+        );
+        assert_eq!(
+            call(&app, "GET", "/api/actions", None).await,
+            (StatusCode::OK, json!({ "ok": ["flash"] }))
+        );
+        assert_eq!(
+            call(&app, "POST", "/api/action/flash", Some("{}")).await,
+            (StatusCode::OK, json!({ "ok": "started" }))
+        );
+        assert_eq!(
+            call(&app, "POST", "/api/action/nope", Some("{}")).await,
+            (
+                StatusCode::NOT_FOUND,
+                json!({ "error": "unknown action nope" })
+            )
+        );
+        assert_eq!(
+            call(&app, "POST", "/api/action_stop", Some("{}")).await,
+            (StatusCode::OK, json!({ "ok": null }))
+        );
     }
 }

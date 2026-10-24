@@ -1515,6 +1515,7 @@ dependencies = [
  "axum",
  "clap",
  "glowmote-control",
+ "glowmote-core",
  "http-body-util",
  "include_dir",
  "serde",

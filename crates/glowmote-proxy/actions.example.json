@@ -1,0 +1,22 @@
+{
+  "scare": [
+    {"power": true},
+    {"repeat": {"times": 3, "steps": [
+      {"color": {"rgb": "ffffff"}},
+      {"wait_ms": 120},
+      {"power": false},
+      {"wait_ms": 120},
+      {"power": true}
+    ]}},
+    {"color": {"rgb": "ff0000"}},
+    {"wait_ms": 2000},
+    {"scene": {"first": "ff9500", "second": "af52de", "speed": 60}}
+  ],
+  "porch": [
+    {"power": true},
+    {"color": {"rgb": "ffd8a8", "brightness": 80}}
+  ],
+  "off": [
+    {"power": false}
+  ]
+}

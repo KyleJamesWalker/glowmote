@@ -2,9 +2,10 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use glowmote_control::Controller;
+use glowmote_proxy::actions::{self, Actions};
 
 #[derive(Parser)]
 #[command(
@@ -24,12 +25,25 @@ struct Cli {
     /// Seconds to scan for devices
     #[arg(long, default_value_t = 5)]
     scan_secs: u64,
+
+    /// JSON file of named actions, triggered with POST /api/action/<name>
+    #[arg(long)]
+    actions: Option<std::path::PathBuf>,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
     let controller = Arc::new(Controller::new(Duration::from_secs(cli.scan_secs)));
+    let defs = match &cli.actions {
+        Some(path) => {
+            let json = std::fs::read_to_string(path)
+                .with_context(|| format!("reading {}", path.display()))?;
+            actions::parse(&json).map_err(anyhow::Error::msg)?
+        }
+        None => Default::default(),
+    };
+    let actions = Arc::new(Actions::new(controller.clone(), defs));
 
     if let Some(device) = cli.device {
         let controller = controller.clone();
@@ -43,7 +57,7 @@ async fn main() -> Result<()> {
 
     let listener = tokio::net::TcpListener::bind(cli.listen).await?;
     eprintln!("serving on http://{}", listener.local_addr()?);
-    axum::serve(listener, glowmote_proxy::router(controller.clone()))
+    axum::serve(listener, glowmote_proxy::app(controller.clone(), actions))
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c().await.ok();
         })

@@ -86,6 +86,21 @@ Colors are `RRGGBB` hex, with or without `#`; brightness and speed are 0-100. Co
 clients run one at a time in arrival order, so send DIY pixels sequentially to keep their order.
 
 
+### Actions
+
+`--actions file.json` loads named sequences that anything able to send an HTTP request can
+trigger: a motion sensor, a button, a script. See `crates/glowmote-proxy/actions.example.json`.
+
+```sh
+cargo run -p glowmote-proxy -- --device ISP-50542B --actions crates/glowmote-proxy/actions.example.json
+curl -H 'content-type: application/json' -d '{}' http://127.0.0.1:8484/api/action/scare
+```
+
+Steps are `power`, `color` (`rgb`, `brightness`), `scene` (`first`, `second`, `speed`,
+`brightness`, `reverse`), `wait_ms` and `repeat` (`times`, `steps`); the file is checked at
+startup. An action runs in the background; triggering another stops it, and
+`POST /api/action_stop` stops it outright. `GET /api/actions` lists the names.
+
 ## Android
 
 The app builds for Android 8.0 (API 26) and later, with Bluetooth through
