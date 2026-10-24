@@ -82,11 +82,11 @@ Built by `BleProtocol.sendSingleColor` (`com/winkison/smartlights/ble/BleProtoco
 | 1–4 | tag | `SGLS` |
 | 5 | mode (effect index) | `00` = solid |
 | 6 | direction (inverted "reverse" flag) | `00` |
-| 7 | constant | `64` (100) |
+| 7 | brightness, 0–100 (the app always sends 100) | `64` |
 | 8 | speed | `50` |
 | 9–11 | color 1 RGB | |
 | 12–14 | color 2 RGB (same as color 1 for solid) | |
-| 15 | saturation | `32` |
+| 15 | saturation (ignored by the `TR2309` firmware) | `32` |
 
 From the app code, not yet captured:
 
@@ -99,6 +99,22 @@ From the app code, not yet captured:
 - Saturation: slider; the app's reset value is 100.
 - The color screen sends at most one `SGLS` per 50 ms (`ColorFragment.sendSingleColor`).
 
+Effects by mode, read from the `TR2309` renderer (not yet captured). Color 1 is the foreground,
+color 2 the background; frame period is `(100 − speed) + 20` ticks:
+
+| Mode | Effect |
+|---|---|
+| 0 | static color 1 |
+| 1 | half-segment color 1 bar running over color 2 |
+| 2 | stacking: a dot runs and piles up at the end |
+| 3 | meteor: 9-pixel fading tail plus 5 color 2 pixels, scrolling |
+| 4 | pulse wave: 23-pixel ramp up and down, scrolling |
+| 5 | theater chase: every 4th LED color 1 |
+| 6 | single color 1 dot running over color 2 |
+| 7 | color 1 bar grows in, travels and slides off |
+| 8 | breathe, switching between color 1 and color 2 |
+| 9 | strobe, alternating color 1 and color 2 |
+
 ### `MULT` (scenes)
 
 Built by `MutilColorAgreement.sendMutilColor`. All three scenes captured (Christmas tree, reef,
@@ -110,10 +126,10 @@ fence) sent `07` in byte 5.
 | 1–4 | tag | `MULT` |
 | 5 | effect (`modelIndex − 10`) | `07` |
 | 6 | direction (inverted "reverse" flag) | `00`, `01` |
-| 7 | constant | `64` |
+| 7 | brightness, 0–100 (the app always sends 100) | `64` |
 | 8 | speed, 0–100 | `00`–`64` |
-| 9 | color count | `02` |
-| 10 | brightness, 0–100 (`saturation` in the app) | `05`–`64` |
+| 9 | color count, 1–7 | `02` |
+| 10 | brightness scaling of the frame colors (`saturation` in the app; ignored by the `TR2309` firmware) | `05`–`64` |
 
 The colors follow in a second step:
 
@@ -126,6 +142,24 @@ The colors follow in a second step:
 
 Example, 2 colors `ff00ff` and `1400cb` at brightness 29: `07 00 49 00 49 05 00 3a` + zeros.
 
+Effects by byte 5, read from the `TR2309` renderer (not yet captured; background is black). The
+app's `modelIndex` 10, 11 and 12 map to effects 7, 8 and 9, 13–19 to 0–6, and 20–21 to 10–11:
+
+| Effect | Description |
+|---|---|
+| 0 | color bands scrolling |
+| 1 | static bands with random pixels blanked (twinkle) |
+| 2 | color wipe, each color over the last |
+| 3 | curtain wipe from the center out and back |
+| 4 | one dot per color chasing on black |
+| 5 | half-strip bar enters and leaves, next color each pass |
+| 6 | stacking fill, next color each round |
+| 7 | meteor tails per color, scrolling |
+| 8 | pulse waves per color, scrolling |
+| 9 | smooth gradient between consecutive colors, flowing |
+| 10 | jump: whole strip one color at a time |
+| 11 | breathe through the colors |
+
 ### `DOOD` (DIY pixels)
 
 Built by `BleProtocol.graffiti`. Acked with `DOODOK`.
@@ -136,14 +170,16 @@ Built by `BleProtocol.graffiti`. Acked with `DOODOK`.
 | 1–4 | tag | `DOOD` |
 | 5 | target | `01` one pixel, `00` fill all |
 | 6–7 | pixel index, big-endian; LED count when filling | `0000`–`00b3`; fill `00b4` |
-| 8 | mode | `02` |
-| 9 | speed | `64` |
+| 8 | mode: `00` flash, `01` breathe, `02` static (firmware; only `02` captured) | `02` |
+| 9 | speed, 1–100, 100 fastest; pixels with the same speed animate in sync | `64` |
 | 10–12 | RGB | |
-| 13 | DIY brightness, 0–100 | `41`, `32` |
+| 13 | DIY brightness, 0–100 (ignored by the `TR2309` firmware) | `41`, `32` |
 | 14–15 | zero | |
 
 The DIY brightness slider sends nothing by itself; the value rides on the next `DOOD`. The app
-enters DIY with `DEN 00` and leaves with `DSTOP`; neither is acked.
+enters DIY with `DEN 00` and leaves with `DSTOP`; neither is acked. Per the `TR2309` firmware,
+`DEN 00` backs up and clears the canvas, `DSTOP 00` restores the previous mode and discards the
+drawing, and `DSTOP 01` leaves the drawing showing.
 
 **Brightness has no command.** The app scales the RGB channels: red at 100% → `ff`, ~50% →
 `7f`–`89`, 0% → `02`. A lit channel never drops below `02`.
@@ -151,7 +187,8 @@ enters DIY with `DEN 00` and leaves with `DSTOP`; neither is acked.
 ## Acknowledgements
 
 Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. Only the first
-`len + 1` bytes are meaningful; the rest is stale buffer data from earlier replies.
+`len + 1` bytes are meaningful. The firmware encrypts the 16 bytes starting at the reply in its
+reply table, so the trailing bytes are the next table entry.
 
 | Reply to | Plaintext |
 |---|---|
@@ -178,18 +215,28 @@ blink (glowmote `probe`, 2026-10-24).
 
 ## Commands seen in the app but not yet captured
 
-Do not send these until a capture confirms the exact bytes.
+Do not send these until a capture confirms the exact bytes. Layouts are predicted from the
+`TR2309R002-02` firmware and the vendor app; the predicted replies for captured commands match
+the reference device byte for byte, so the rest likely carry over. Each reply below is `<TAG>OK`.
 
-| Tag | Purpose | Builder |
+| Command (plaintext) | Purpose | Notes |
 |---|---|---|
-| `LIGHT` | brightness, `06 'LIGHT' <n>` (other product lines) | `sendLight` |
-| `SPEED` | effect speed, `06 'SPEED' <n>` (other product lines) | `sendSpeed` |
-| `TR\0W` | color/mode (other product lines) | `sendColor` |
-| `SCHL` / `SCH0` | timers | `sendTimer`, `getTimerLightSwitch` |
-| `CORFIRM` / `CHECKLINE` | RGB channel order | `sendCheckLine*` |
-| `SHVEW` | enter DIY mode | `Agreement.getEnterDiyCommand` |
-| `DOOT`, `DOOTCP` | bulk DIY upload | `BleProtocol.graffiti(List)`, `sendDootCp` |
-| `DEN 01` | enter DIY, variant | `enterDiyMode1` |
+| `0c 'SCHD' onEn onMask onH onM offEn offMask offH offM 00 00 00` | on and off timers | Week mask bit 0 = Monday. Mask 0 = once. Fires against the `TIME` clock. The app's builder is `getTimerLightSwitch`; `SCHL`/`SCH0` was a misreading |
+| `06 'LAMPT' type volt rate` | LED chip type | **type 0–4 only** (WS2812B, SK6813, SM16703, UCS1903B, QS2633) |
+| `09 'LAMPN' seg_hi seg_lo total_hi total_lo` | LEDs per segment and total | keep total ≤ 400 (`TR2210` rejects more with `LAMPNMAX`) |
+| `05 'LAMPQ'` | query type and capabilities | reply `07 'LAMPQ' type volt 00` then 480, 160, 100, 140 (u16 LE) |
+| `07 'DIRECT' rev` | strip direction | 0 mirrors pixel order inside each segment |
+| `07 'SPLAY' scenes frames` + frames on `…960a` | playlist of saved scenes | **scenes 1–8**, frame scene index 0–7; finish with `06 'SPLACP'` then `08 'STARTCY' 01` |
+| `04 'DOOT' frames` + frames on `…960a` | bulk DIY upload | 7-byte records `count_hi count_lo R G B mode speed`; **total count ≤ LED count**; finish with `06 'DOOTCP'` then `08 'DTARTCY' 01` |
+| `04 'DEN' 01` | enter DIY without clearing the canvas | |
+| `04 'MOVE'` | identify blink | no reply |
+| `0a 'CHECKLINE' 01`, `CONFIRM`, `CSTOPR` | RGB channel-order wizard | result saved |
+| `06 'LIGHT' n` | brightness | no reply |
+| `MIC`, `RSTOPR` | music mode | rhythm data on `…960b` |
+| `TEST` | factory test | **never send**: sets 400 LEDs and cycles colors |
+
+Exact predicted plaintext and ciphertext for each command and reply is in
+`research/firmware/predictions/predict.txt` (git-ignored).
 
 ## OTA service (`ae00`)
 
@@ -279,8 +326,19 @@ The renderers are guarded: 10 `SGLS` effects (jump table at `0x01e06cf6`) and 12
 capability record behind `LAMPQ` advertises 480, 160, 100 and 140; 480 looks like the maximum
 LED count. Speed, brightness and saturation are stored as-is and bounded only by being bytes.
 
-glowmote sends only `SGLS` mode 0 and `MULT` effect 7, and refuses `DOOD` indexes and fill
-counts above 400 (`ideal::MAX_LEDS`).
+Reading the uncaptured handlers found more unchecked fields, all of which also persist:
+
+| Command | Field | Safe range | Out of range |
+|---|---|---|---|
+| `LAMPT` | byte 6, LED type | 0–4 | boot reads LED timing past its table: the lights look dead after every power cycle (fixable over BLE with a valid type) |
+| `SPLAY` | byte 6, scene count | 1–8 | the save writes RAM junk over flash keys up to the device name and MAC address |
+| `SPLAY` frame | byte 2, scene index | 0–7 | writes past the 8-record scene table |
+| `MULT` | byte 9, color count | 1–7 | above 7 overflows the color slots; 0 divides by zero |
+| `DOOT`, `SPLAY` type 04 | sum of record counts | ≤ LED count ≤ 400 | writes past the pixel buffers |
+| `DOOD` | byte 9, speed | 1–100 | zeroes one entry past several arrays; the app's own 100 already does (RAM only, low risk) |
+
+glowmote sends only `SGLS` mode 0, `MULT` effect 7 with two colors, and `DOOD` mode 2 at speed
+100, and refuses `DOOD` indexes and fill counts above 400 (`ideal::MAX_LEDS`).
 
 ## Capturing more
 
