@@ -56,7 +56,7 @@ Captured on 2026-10-24 from the reference device; see
 | Solid green | `0f 'SGLS' 00 00 64 50 00 ff 00 00 ff 00 32` | `a06566adefd31c59d5c85979620ce9ef` |
 | Solid blue | `0f 'SGLS' 00 00 64 50 00 00 ff 00 00 ff 32` | `c7f95a08c3583941208cca2d3e6e91c0` |
 
-### `SGLS` (colour / effect)
+### `SGLS` (color / effect)
 
 Built by `BleProtocol.sendSingleColor` (`com/winkison/smartlights/ble/BleProtocol.java`):
 
@@ -68,8 +68,8 @@ Built by `BleProtocol.sendSingleColor` (`com/winkison/smartlights/ble/BleProtoco
 | 6 | direction (inverted "reverse" flag) | `00` |
 | 7 | constant | `64` (100) |
 | 8 | speed | `50` |
-| 9–11 | colour 1 RGB | |
-| 12–14 | colour 2 RGB (same as colour 1 for solid) | |
+| 9–11 | color 1 RGB | |
+| 12–14 | color 2 RGB (same as color 1 for solid) | |
 | 15 | saturation | `32` |
 
 **Brightness has no command.** The app scales the RGB channels: red at 100% → `ff`, ~50% →
@@ -105,13 +105,13 @@ Do not send these until a capture confirms the exact bytes.
 |---|---|---|
 | `LIGHT` | brightness (other product lines) | `sendLight` |
 | `SPEED` | effect speed | `sendSpeed` |
-| `TR\0W` | colour/mode (other product lines) | `sendColor` |
+| `TR\0W` | color/mode (other product lines) | `sendColor` |
 | `TIME` | set clock | `getTimeCommand` |
 | `SCHL` / `SCH0` | timers | `sendTimer`, `getTimerLightSwitch` |
 | `CORFIRM` / `CHECKLINE` | RGB channel order | `sendCheckLine*` |
 | `SHVEW` | enter DIY mode | `Agreement.getEnterDiyCommand` |
 | `DOOTCP`, `STOP` | graffiti mode | `sendDootCp`, `outMode` |
-| `MULT` | multi-colour | `sendMutilColor` |
+| `MULT` | multi-color | `sendMutilColor` |
 
 ## Capturing more
 

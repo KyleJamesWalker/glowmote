@@ -15,7 +15,7 @@ impl Rgb {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("expected a colour as RRGGBB hex, got {0:?}")]
+#[error("expected a color as RRGGBB hex, got {0:?}")]
 pub struct ParseRgbError(String);
 
 impl FromStr for Rgb {

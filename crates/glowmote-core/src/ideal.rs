@@ -52,10 +52,10 @@ pub fn power(on: bool) -> Packet {
     tagged(b"TURN", &[on as u8])
 }
 
-/// Solid colour. Brightness is applied by scaling the channels, as the vendor app does.
+/// Solid color. Brightness is applied by scaling the channels, as the vendor app does.
 pub fn solid_color(color: Rgb, brightness_pct: u8) -> Packet {
     let Rgb { r, g, b } = scale(color, brightness_pct.min(100));
-    // mode 0 (solid), direction 0, fixed 100, speed 0x50, colour twice, saturation 0x32
+    // mode 0 (solid), direction 0, fixed 100, speed 0x50, color twice, saturation 0x32
     tagged(b"SGLS", &[0x00, 0x00, 0x64, 0x50, r, g, b, r, g, b, 0x32])
 }
 
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn recognises_names() {
+    fn recognizes_names() {
         assert!(is_ideal_name("ISP-50542B"));
         assert!(is_ideal_name("IDL-1234"));
         assert!(!is_ideal_name("MyQ-9C2"));

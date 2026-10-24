@@ -3,7 +3,7 @@
 One remote for all your LED lights. A Rust replacement for the pile of vendor apps that
 each control one brand of LED strip, targeting Windows, macOS, Linux and Android.
 
-Supported today: iDeal LED / Winkison BLE controllers (`ISP-*`, `IDL-*`): power, solid colour
+Supported today: iDeal LED / Winkison BLE controllers (`ISP-*`, `IDL-*`): power, solid color
 and brightness. See [docs/devices.md](docs/devices.md) for what's planned.
 
 ## Usage

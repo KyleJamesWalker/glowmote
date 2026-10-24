@@ -29,7 +29,7 @@ enum Command {
     Scan,
     On,
     Off,
-    /// Set a solid colour
+    /// Set a solid color
     Color {
         /// RRGGBB hex, e.g. ff0000
         rgb: Rgb,
