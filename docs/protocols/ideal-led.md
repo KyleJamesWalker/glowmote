@@ -72,6 +72,16 @@ Built by `BleProtocol.sendSingleColor` (`com/winkison/smartlights/ble/BleProtoco
 | 12–14 | color 2 RGB (same as color 1 for solid) | |
 | 15 | saturation | `32` |
 
+From the app code, not yet captured:
+
+- Effects and speed are both carried by `SGLS`; this product line never sends `SPEED` or `LIGHT`.
+- Mode: 0–9 on the main color screen, 0–19 under Scenes, each with its own default color pair
+  (`LightColorCore.setLightsColorById`).
+- Speed: slider 0–100; the app's default is 80 (`0x50`).
+- Direction: the app defaults "reverse" to on and sends its inverse, hence `00`.
+- Saturation: slider; the app's reset value is 100.
+- The color screen sends at most one `SGLS` per 50 ms (`ColorFragment.sendSingleColor`).
+
 **Brightness has no command.** The app scales the RGB channels: red at 100% → `ff`, ~50% →
 `7f`–`89`, 0% → `02`. A lit channel never drops below `02`.
 
@@ -103,8 +113,8 @@ Do not send these until a capture confirms the exact bytes.
 
 | Tag | Purpose | Builder |
 |---|---|---|
-| `LIGHT` | brightness (other product lines) | `sendLight` |
-| `SPEED` | effect speed | `sendSpeed` |
+| `LIGHT` | brightness, `06 'LIGHT' <n>` (other product lines) | `sendLight` |
+| `SPEED` | effect speed, `06 'SPEED' <n>` (other product lines) | `sendSpeed` |
 | `TR\0W` | color/mode (other product lines) | `sendColor` |
 | `TIME` | set clock | `getTimeCommand` |
 | `SCHL` / `SCH0` | timers | `sendTimer`, `getTimerLightSwitch` |
