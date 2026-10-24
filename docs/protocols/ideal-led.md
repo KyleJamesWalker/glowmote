@@ -252,6 +252,32 @@ inferred from their names only: `SPLAY` (a third bulk upload with `…REOK`/`…
 parameter limits live in code; reading them needs a pi32v2 disassembler such as
 [ghidra-jieli](https://github.com/virtualabs/ghidra-jieli).
 
+## Firmware limits (`TR2309R002-02`)
+
+Read from the decrypted `app.bin` of the closest sibling image in Ghidra, with the q32s module
+extended until it matched JieLi's own `rom.lst` disassembly. The reference device's firmware is
+newer and may differ, so treat these as the safe envelope, not as its exact behavior.
+Addresses are load addresses (`app.bin` offset + `0x01e00120`).
+
+The command parser (`0x01e055c8`) decrypts each packet into fixed globals and matches tags byte
+by byte. Three paths index arrays with packet bytes **without any bounds check**; the staged
+data is saved to flash and reloaded at boot, so a bad value can survive a power cycle:
+
+| Command | Field | Valid | Unchecked write |
+|---|---|---|---|
+| `SGLS` | byte 5, mode | 0–9 | `slot * 9` into a 10-slot array at RAM `0x4ef0` (`0x01e059c6`, `0x01e059ce`); also `1 << mode` into a bitmask |
+| `MULT` | byte 5, effect | 0–11 | `slot * 0x19` into a 12-slot array at RAM `0x592c` (`0x01e05adc`, `0x01e05aee`) |
+| `DOOD` (one pixel) | bytes 6–7, index | below 400 | five 400-byte channel buffers from RAM `0x306a` (`0x01e06462`–`0x01e06484`) |
+
+The renderers are guarded: 10 `SGLS` effects (jump table at `0x01e06cf6`) and 12 `MULT` effects
+(`0x01e075cc`); out-of-range effects are skipped, and the final pixel output checks the LED count.
+`CT` and `LAMPN` only clamp an LED count of 0 to 11; there is no maximum on this image. The
+capability record behind `LAMPQ` advertises 480, 160, 100 and 140; 480 looks like the maximum
+LED count. Speed, brightness and saturation are stored as-is and bounded only by being bytes.
+
+glowmote sends only `SGLS` mode 0 and `MULT` effect 7, and refuses `DOOD` indexes and fill
+counts above 400 (`ideal::MAX_LEDS`).
+
 ## Capturing more
 
 1. Phone: Developer options → **Enable Bluetooth HCI snoop log → Enabled** (not Filtered), then
