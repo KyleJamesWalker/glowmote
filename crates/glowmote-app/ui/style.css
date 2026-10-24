@@ -304,3 +304,8 @@ input.text {
 #designs .swatches { display: inline-flex; }
 #designs .swatches span { width: 12px; height: 12px; border-radius: 50%; margin-left: -3px; box-shadow: 0 0 0 2px var(--card); }
 #designs .design-delete { padding: 6px 10px; color: var(--muted); }
+
+.actions { display: flex; gap: 8px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 8px 0 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-variant-numeric: tabular-nums; }

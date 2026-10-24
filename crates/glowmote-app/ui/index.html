@@ -21,7 +21,10 @@
     <section class="card" aria-labelledby="lights-heading">
       <div class="row">
         <h2 id="lights-heading">Lights</h2>
-        <button id="scan" class="ghost" type="button">Scan</button>
+        <div class="actions">
+          <button id="disconnect" class="ghost" type="button" hidden>Disconnect</button>
+          <button id="scan" class="ghost" type="button">Scan</button>
+        </div>
       </div>
       <ul id="devices"></ul>
     </section>
@@ -127,6 +130,13 @@
       </section>
 
       <section id="panel-setup" class="card panel" role="tabpanel" aria-labelledby="tab-setup" hidden>
+        <div>
+          <h3>Device</h3>
+          <dl id="device-info" class="facts">
+            <dt>Model</dt><dd id="info-model">–</dd>
+            <dt>Firmware</dt><dd id="info-firmware">–</dd>
+          </dl>
+        </div>
         <div>
           <h3>White balance</h3>
           <p class="hint">Scales each channel before sending. Show white, then lower the strongest channels until the strip looks white.</p>

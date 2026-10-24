@@ -20,24 +20,28 @@ async function run(command, args) {
   try {
     return await invoke(command, args);
   } catch (e) {
-    setStatus(String(e), true);
+    const message = String(e);
+    setStatus(message, true);
+    if (message === "not connected") showDisconnected("Connection lost");
   }
 }
 
 // Lights
 
 async function scan() {
+  const before = [$("link").dataset.state, $("link-text").textContent];
   $("scan").disabled = true;
   setLink("busy", "Scanning…");
   try {
     const names = await invoke("scan_lights");
     $("devices").replaceChildren(...names.map(deviceButton));
+    if (before[0] === "on") markCurrent(before[1]);
     setStatus(names.length ? "" : "No lights found. Close the vendor app and scan again.");
   } catch (e) {
     setStatus(String(e), true);
   } finally {
     $("scan").disabled = false;
-    if ($("link").dataset.state === "busy") setLink("off", "Not connected");
+    if ($("link").dataset.state === "busy") setLink(...before);
   }
 }
 
@@ -46,12 +50,57 @@ function deviceButton(name) {
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = name;
-  button.addEventListener("click", () => connect(name, button));
+  button.addEventListener("click", () => connect(name));
   li.append(button);
   return li;
 }
 
-async function connect(name, button) {
+function remember(name) {
+  try {
+    if (name) localStorage.setItem("lastLight", name);
+    else localStorage.removeItem("lastLight");
+  } catch {}
+}
+
+function lastLight() {
+  try {
+    return localStorage.getItem("lastLight");
+  } catch {
+    return null;
+  }
+}
+
+function markCurrent(name) {
+  for (const b of $("devices").querySelectorAll("button")) {
+    if (b.textContent === name) b.setAttribute("aria-current", "true");
+    else b.removeAttribute("aria-current");
+  }
+}
+
+async function showConnected(name) {
+  markCurrent(name);
+  $("controls").inert = false;
+  $("disconnect").hidden = false;
+  setLink("on", name);
+  const info = await run("info");
+  $("info-model").textContent = info?.model ?? "–";
+  $("info-firmware").textContent = info?.firmware?.filter(Boolean).join(" · ") || "–";
+  $("link").title = info ? `${info.model} · ${info.firmware.filter(Boolean).join(" · ")}` : "";
+}
+
+function showDisconnected(text = "Not connected") {
+  markCurrent(null);
+  $("controls").inert = true;
+  $("disconnect").hidden = true;
+  $("diy-mode").checked = false;
+  $("diy-tools").inert = true;
+  $("info-model").textContent = "–";
+  $("info-firmware").textContent = "–";
+  $("link").title = "";
+  setLink("off", text);
+}
+
+async function connect(name) {
   setLink("busy", `Connecting to ${name}…`);
   setStatus("");
   $("controls").inert = true;
@@ -59,13 +108,36 @@ async function connect(name, button) {
   $("diy-tools").inert = true;
   try {
     await invoke("connect", { name });
-    for (const b of $("devices").querySelectorAll("button")) b.removeAttribute("aria-current");
-    button.setAttribute("aria-current", "true");
-    $("controls").inert = false;
-    setLink("on", name);
+    remember(name);
+    await showConnected(name);
   } catch (e) {
-    setLink("off", "Not connected");
+    showDisconnected();
     setStatus(String(e), true);
+  }
+}
+
+async function disconnect() {
+  await run("disconnect");
+  remember(null);
+  showDisconnected();
+}
+
+// Adopts a connection the backend already holds, otherwise reconnects to the last light used.
+async function resume() {
+  const current = await run("status");
+  if (current) {
+    $("devices").replaceChildren(deviceButton(current));
+    await showConnected(current);
+    return;
+  }
+  const last = lastLight();
+  if (!last) return;
+  setStatus(`Looking for ${last}…`);
+  await scan();
+  if ([...$("devices").querySelectorAll("button")].some((b) => b.textContent === last)) {
+    await connect(last);
+  } else {
+    setStatus(`${last} not found. Close the vendor app, then scan.`);
   }
 }
 
@@ -528,9 +600,11 @@ $("wb-reset").addEventListener("click", () => {
 });
 
 $("scan").addEventListener("click", scan);
+$("disconnect").addEventListener("click", disconnect);
 loadWb();
 showWb();
 pickColor($("color").value, false);
 loadLayout();
 buildStrip();
 showDesigns();
+resume();

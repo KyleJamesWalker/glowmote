@@ -1415,12 +1415,9 @@ dependencies = [
 name = "glowmote-app"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "glowmote-ble",
- "glowmote-core",
+ "glowmote-control",
  "tauri",
  "tauri-build",
- "tokio",
 ]
 
 [[package]]

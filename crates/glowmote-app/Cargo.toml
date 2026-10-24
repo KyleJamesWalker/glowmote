@@ -9,11 +9,8 @@ name = "glowmote_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
-anyhow = "1.0.104"
-glowmote-ble = { path = "../glowmote-ble" }
-glowmote-core = { path = "../glowmote-core" }
+glowmote-control = { path = "../glowmote-control" }
 tauri = { version = "2.12.5", features = [] }
-tokio = { version = "1.54.1", features = ["sync"] }
 
 [build-dependencies]
 tauri-build = { version = "2.7.4", features = [] }
