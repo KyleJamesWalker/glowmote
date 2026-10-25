@@ -33,12 +33,6 @@ impl From<Error> for String {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Music effects seen in a vendor app capture; the app offers 10.
-pub const CAPTURED_MUSIC_EFFECTS: [u8; 3] = [0, 1, 2];
-
-/// `MULT` effects seen in a vendor app capture; the firmware has 12.
-pub const CAPTURED_SCENE_EFFECTS: [u8; 5] = [0, 1, 7, 8, 9];
-
 /// Finds and opens lights. [`Ble`] is the real one; tests substitute a fake.
 pub trait Radio: Send + Sync + 'static {
     type Found: Clone + Send;
@@ -288,7 +282,7 @@ impl<R: Radio> Controller<R> {
         }
     }
 
-    /// A scene with any captured effect and 1 to 7 colors.
+    /// A scene with any of the firmware's 12 effects and 1 to 7 colors.
     pub async fn scene_effect(
         &self,
         effect: u8,
@@ -297,11 +291,6 @@ impl<R: Radio> Controller<R> {
         brightness: u8,
         reverse: bool,
     ) -> Result<()> {
-        if !CAPTURED_SCENE_EFFECTS.contains(&effect) {
-            return Err(Error::Invalid(format!(
-                "scene effect {effect} is not captured yet"
-            )));
-        }
         let colors = colors
             .iter()
             .map(|c| parse(c))
@@ -340,6 +329,27 @@ impl<R: Radio> Controller<R> {
             light.send_unacked(&clock).await?;
         }
         self.send(schedule).await
+    }
+
+    /// An `SGLS` effect: `first` is the foreground color and `second` the background.
+    pub async fn effect(
+        &self,
+        mode: u8,
+        first: &str,
+        second: &str,
+        speed: u8,
+        brightness: u8,
+        reverse: bool,
+    ) -> Result<String> {
+        let packet = ideal::effect(
+            mode,
+            reverse,
+            speed,
+            [parse(first)?, parse(second)?],
+            brightness,
+        )
+        .map_err(|e| Error::Invalid(e.to_string()))?;
+        self.send(packet).await
     }
 
     /// Enters or leaves DIY mode; `keep_drawing` only matters when leaving.
@@ -401,11 +411,6 @@ impl<R: Radio> Controller<R> {
     /// picks the effect and enters music mode before `MIC` switches to the light's microphone.
     /// Turning it off restores the previous mode.
     pub async fn music(&self, on: bool, effect: u8) -> Result<()> {
-        if !CAPTURED_MUSIC_EFFECTS.contains(&effect) {
-            return Err(Error::Invalid(format!(
-                "music effect {effect} is not captured yet"
-            )));
-        }
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
         if on {
@@ -422,11 +427,6 @@ impl<R: Radio> Controller<R> {
     /// One music level block, 1–100, for music driven by this computer's microphone. The first
     /// block switches the light to music mode; send one about every 120 ms, as the vendor app does.
     pub async fn music_level(&self, effect: u8, level: u8) -> Result<()> {
-        if !CAPTURED_MUSIC_EFFECTS.contains(&effect) {
-            return Err(Error::Invalid(format!(
-                "music effect {effect} is not captured yet"
-            )));
-        }
         let block = ideal::rhythm(effect, level).map_err(|e| Error::Invalid(e.to_string()))?;
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
@@ -598,7 +598,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scene_effects_are_limited_to_captured_ones() {
+    async fn scene_effects_stay_inside_the_firmware_table() {
         let (c, log) = controller(vec!["ISP-1"]);
         c.connect_matching(None).await.unwrap();
         let colors = ["ff0000".to_string(), "00ff00".to_string()];
@@ -606,7 +606,7 @@ mod tests {
         let red_green = [Rgb::new(0xff, 0, 0), Rgb::new(0, 0xff, 0)];
         let (header, _) = ideal::multi_color(8, false, 50, &red_green, 100).unwrap();
         assert_eq!(*log.lock().unwrap(), [header]);
-        for effect in [2, 10, 12] {
+        for effect in [12, 13, 255] {
             assert!(matches!(
                 c.scene_effect(effect, &colors, 50, 100, false).await,
                 Err(Error::Invalid(_))
@@ -694,11 +694,11 @@ mod tests {
                 ideal::rhythm_stop(),
             ]
         );
-        assert!(matches!(c.music(true, 3).await, Err(Error::Invalid(_))));
+        assert!(matches!(c.music(true, 10).await, Err(Error::Invalid(_))));
     }
 
     #[tokio::test]
-    async fn music_levels_stream_captured_effects_only() {
+    async fn music_levels_stay_inside_the_effect_range() {
         let (c, log) = controller(vec!["ISP-1"]);
         c.connect_matching(None).await.unwrap();
         c.music_level(1, 40).await.unwrap();
@@ -707,8 +707,29 @@ mod tests {
             *log.lock().unwrap(),
             [ideal::rhythm(1, 40).unwrap(), ideal::rhythm_stop()]
         );
-        assert!(matches!(c.music_level(5, 40).await, Err(Error::Invalid(_))));
+        assert!(matches!(
+            c.music_level(10, 40).await,
+            Err(Error::Invalid(_))
+        ));
         assert!(matches!(c.music_level(0, 0).await, Err(Error::Invalid(_))));
+    }
+
+    #[tokio::test]
+    async fn effects_stay_inside_the_firmware_table() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        c.effect(9, "ff0000", "0000ff", 60, 100, false)
+            .await
+            .unwrap();
+        let colors = [Rgb::new(0xff, 0, 0), Rgb::new(0, 0, 0xff)];
+        assert_eq!(
+            *log.lock().unwrap(),
+            [ideal::effect(9, false, 60, colors, 100).unwrap()]
+        );
+        assert!(matches!(
+            c.effect(10, "ff0000", "0000ff", 60, 100, false).await,
+            Err(Error::Invalid(_))
+        ));
     }
 
     #[tokio::test]

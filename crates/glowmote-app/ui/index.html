@@ -54,6 +54,17 @@
         <div class="effects">
           <h3>Effect</h3>
           <div id="color-effects" class="chips" role="radiogroup" aria-label="Color effect"></div>
+          <p class="hint">Dimmed effects are predicted from the firmware, not captured yet.</p>
+        </div>
+        <div id="effect-controls" class="stack" hidden>
+          <div class="row">
+            <label class="inline">Background <input id="effect-second" class="mini-color" type="color" value="#000000"></label>
+            <label class="inline toggle-row">Reverse <span class="switch"><input id="effect-reverse" type="checkbox"><span></span></span></label>
+          </div>
+          <div class="slider">
+            <label for="effect-speed">Speed <output id="effect-speed-value">80%</output></label>
+            <input id="effect-speed" type="range" min="0" max="100" value="80">
+          </div>
         </div>
         <div class="slider">
           <label for="brightness">Brightness <output id="brightness-value">100%</output></label>

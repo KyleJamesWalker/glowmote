@@ -205,13 +205,23 @@ let previewingWhite = false;
 let colorInFlight = false;
 let queuedColor = null;
 async function sendColor(picked = $("color").value) {
-  queuedColor = { rgb: balance(picked), brightness: Number($("brightness").value) };
+  const brightness = Number($("brightness").value);
+  queuedColor = colorEffect === 0 || picked === "#ffffff" && previewingWhite
+    ? ["color", { rgb: balance(picked), brightness }]
+    : ["effect", {
+      mode: colorEffect,
+      first: balance(picked),
+      second: balance($("effect-second").value),
+      speed: Number($("effect-speed").value),
+      brightness,
+      reverse: $("effect-reverse").checked,
+    }];
   if (colorInFlight) return;
   colorInFlight = true;
   while (queuedColor) {
-    const args = queuedColor;
+    const [command, args] = queuedColor;
     queuedColor = null;
-    await run("color", args);
+    await run(command, args);
   }
   colorInFlight = false;
 }
@@ -256,7 +266,7 @@ const COLOR_EFFECTS = [
   "Static", "Running bar", "Stacking", "Meteor", "Pulse wave",
   "Theater chase", "Running dot", "Bar sweep", "Breathe", "Strobe",
 ];
-const COLOR_CAPTURED = new Set([0]);
+const COLOR_CAPTURED = new Set([0, 1]);
 const SCENE_EFFECTS = [
   "Scrolling bands", "Twinkle", "Color wipe", "Curtain", "Chasing dots", "Bar pass",
   "Stacking fill", "Meteor tails", "Pulse waves", "Gradient flow", "Jump", "Breathe",
@@ -270,8 +280,8 @@ function effectChips(container, names, captured, selected, onPick) {
     chip.setAttribute("role", "radio");
     chip.setAttribute("aria-checked", String(mode === selected));
     chip.textContent = name;
-    chip.disabled = !captured.has(mode);
-    chip.title = chip.disabled ? `Mode ${mode}: needs a capture before glowmote can send it` : `Mode ${mode}`;
+    chip.classList.toggle("predicted", !captured.has(mode));
+    chip.title = captured.has(mode) ? `Mode ${mode}` : `Mode ${mode}: predicted from the firmware, not captured yet`;
     chip.addEventListener("click", () => {
       for (const c of chips) c.setAttribute("aria-checked", String(c === chip));
       onPick?.(mode);
@@ -282,14 +292,28 @@ function effectChips(container, names, captured, selected, onPick) {
 }
 
 let sceneEffect = 7;
-effectChips("color-effects", COLOR_EFFECTS, COLOR_CAPTURED, 0);
+let colorEffect = 0;
+effectChips("color-effects", COLOR_EFFECTS, COLOR_CAPTURED, colorEffect, (mode) => {
+  colorEffect = mode;
+  $("effect-controls").hidden = mode === 0;
+  if (onColorTab()) {
+    showPower(true);
+    sendColor();
+  }
+});
 effectChips("scene-effects", SCENE_EFFECTS, SCENE_CAPTURED, sceneEffect, (mode) => {
   sceneEffect = mode;
   resendScene();
 });
 
+$("effect-speed").addEventListener("input", () => {
+  $("effect-speed-value").textContent = `${$("effect-speed").value}%`;
+  sendColor();
+});
+for (const id of ["effect-second", "effect-reverse"]) $(id).addEventListener("input", () => sendColor());
+
 // Music: this computer's microphone streams levels to the light, or the light listens itself.
-// Effect names are not known yet, only that 0-2 work.
+// Effect names are not known yet; 0-2 are captured.
 
 let musicEffect = 0;
 let musicSource = "here";

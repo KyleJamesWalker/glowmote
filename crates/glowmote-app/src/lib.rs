@@ -44,6 +44,20 @@ async fn color(c: Ctl<'_>, rgb: String, brightness: u8) -> CmdResult<String> {
 }
 
 #[tauri::command]
+async fn effect(
+    c: Ctl<'_>,
+    mode: u8,
+    first: String,
+    second: String,
+    speed: u8,
+    brightness: u8,
+    reverse: bool,
+) -> CmdResult<String> {
+    Ok(c.effect(mode, &first, &second, speed, brightness, reverse)
+        .await?)
+}
+
+#[tauri::command]
 async fn scene_effect(
     c: Ctl<'_>,
     effect: u8,
@@ -203,6 +217,7 @@ pub fn run() {
             info,
             power,
             color,
+            effect,
             scene_effect,
             timers,
             diy,
