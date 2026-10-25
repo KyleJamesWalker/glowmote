@@ -389,13 +389,38 @@ impl<R: Radio> Controller<R> {
 
     /// Draws a whole strip in one bulk upload, one color per LED from LED 0.
     pub async fn diy_upload(&self, pixels: &[String]) -> Result<()> {
+        self.diy_animate(pixels, 2, &[]).await
+    }
+
+    /// Draws a whole strip in one bulk upload with a DIY mode (0 flash, 1 breathe, 2 static) and
+    /// a speed per LED, 1–100; an empty `speeds` means 100. LEDs with different speeds animate
+    /// out of step.
+    pub async fn diy_animate(&self, pixels: &[String], mode: u8, speeds: &[u8]) -> Result<()> {
         let leds = u16::try_from(pixels.len())
             .map_err(|_| Error::Invalid(format!("{} LEDs is too many", pixels.len())))?;
-        let colors = pixels
-            .iter()
-            .map(|c| parse(c))
-            .collect::<Result<Vec<_>>>()?;
-        let runs = ideal::diy_runs(&colors, ideal::DiyMode::Static, 100);
+        let mode = match mode {
+            0 => ideal::DiyMode::Flash,
+            1 => ideal::DiyMode::Breathe,
+            2 => ideal::DiyMode::Static,
+            _ => return Err(Error::Invalid(format!("DIY mode {mode} does not exist"))),
+        };
+        if !speeds.is_empty() && speeds.len() != pixels.len() {
+            return Err(Error::Invalid("give one speed per LED".into()));
+        }
+        let mut runs: Vec<ideal::DiyRun> = Vec::new();
+        for (i, pixel) in pixels.iter().enumerate() {
+            let color = parse(pixel)?;
+            let speed = speeds.get(i).copied().unwrap_or(100);
+            match runs.last_mut() {
+                Some(run) if run.color == color && run.speed == speed => run.count += 1,
+                _ => runs.push(ideal::DiyRun {
+                    count: 1,
+                    color,
+                    mode,
+                    speed,
+                }),
+            }
+        }
         let upload = ideal::diy_upload(&runs, leds).map_err(|e| Error::Invalid(e.to_string()))?;
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
@@ -677,6 +702,28 @@ mod tests {
             Err(Error::Invalid(_))
         ));
         assert!(matches!(c.diy_upload(&[]).await, Err(Error::Invalid(_))));
+    }
+
+    #[tokio::test]
+    async fn diy_animate_keeps_a_speed_per_led() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        let pixels = vec!["ff8000".to_string(); 3];
+        c.diy_animate(&pixels, 1, &[30, 30, 70]).await.unwrap();
+        let run = |count, speed| ideal::DiyRun {
+            count,
+            color: Rgb::new(0xff, 0x80, 0),
+            mode: ideal::DiyMode::Breathe,
+            speed,
+        };
+        let upload = ideal::diy_upload(&[run(2, 30), run(1, 70)], 3).unwrap();
+        assert_eq!(*log.lock().unwrap(), [upload.header]);
+        for (mode, speeds) in [(3, vec![]), (1, vec![30]), (1, vec![0, 30, 30])] {
+            assert!(matches!(
+                c.diy_animate(&pixels, mode, &speeds).await,
+                Err(Error::Invalid(_))
+            ));
+        }
     }
 
     #[tokio::test]

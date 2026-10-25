@@ -916,3 +916,37 @@ showDesigns();
 loadSlots();
 showSlots();
 resume();
+
+// Moods: Candle breathes the whole strip between two warm tones; Flicker gives each LED its own
+// warm tone and breathing speed, so neighbors drift out of step like flames.
+
+const BREATHE = 8;
+const WARM = ["#ff7a12", "#ff8f1f", "#ff6a00", "#ffa040", "#ff5a00"];
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+function candle() {
+  $("color-effects").children[BREATHE].click();
+  $("effect-second").value = "#5a1800";
+  $("effect-speed").value = 30;
+  $("effect-speed-value").textContent = "30%";
+  pickColor("#ff8a1a", true);
+}
+
+function flicker() {
+  showPower(true);
+  const pixels = Array.from({ length: ledCount() }, () => balance(pick(WARM)));
+  const speeds = pixels.map(() => 15 + Math.floor(Math.random() * 35));
+  run("diy_animate", { pixels, mode: 1, speeds });
+}
+
+$("moods").replaceChildren(...[["Candle", candle, ["#ff8a1a", "#5a1800"]], ["Flicker", flicker, WARM]]
+  .map(([name, action, colors]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    const duo = document.createElement("span");
+    duo.className = "duo";
+    duo.style.setProperty("--stops", stops(colors));
+    button.append(duo, name);
+    button.addEventListener("click", action);
+    return button;
+  }));

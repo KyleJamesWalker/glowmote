@@ -102,6 +102,11 @@ async fn diy_fill(c: Ctl<'_>, leds: u16, rgb: String, brightness: u8) -> CmdResu
 }
 
 #[tauri::command]
+async fn diy_animate(c: Ctl<'_>, pixels: Vec<String>, mode: u8, speeds: Vec<u8>) -> CmdResult<()> {
+    Ok(c.diy_animate(&pixels, mode, &speeds).await?)
+}
+
+#[tauri::command]
 async fn diy_upload(c: Ctl<'_>, pixels: Vec<String>) -> CmdResult<()> {
     Ok(c.diy_upload(&pixels).await?)
 }
@@ -224,6 +229,7 @@ pub fn run() {
             diy_pixel,
             diy_fill,
             diy_upload,
+            diy_animate,
             music,
             listen
         ])
