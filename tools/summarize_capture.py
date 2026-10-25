@@ -9,13 +9,15 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-CONFIRMED = {"TURN", "SGLS", "MULT", "DOOD", "DEN", "DSTOP", "TIME", "VE", "CT"}
+CONFIRMED = {"TURN", "SGLS", "MULT", "DOOD", "DEN", "DSTOP", "TIME", "VE", "CT", "DOOT", "DOOTCP",
+             "DTARTCY", "SCHD", "MIC", "RSTOPR", "rhythm"}
 LINE = re.compile(r"^\S+ conn=(\S+) (->|<-) (\S+)\s+h=(\S+) raw=(\S*)$")
 
 
 def tag_of(plain: bytes) -> str:
     text = plain[1:].split(b"\0")[0]
-    return re.match(rb"[A-Z]*", text).group().decode() or plain[:4].hex()
+    tag = re.match(rb"[A-Z]*", text).group().decode()
+    return tag or ("rhythm" if plain[0] == 0x02 else plain[:4].hex())
 
 
 def load_predictions(path: str) -> dict:
