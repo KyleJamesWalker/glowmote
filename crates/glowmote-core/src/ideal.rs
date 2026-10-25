@@ -509,9 +509,8 @@ fn mult_frame(colors: &[Rgb], pct: u8) -> [u8; SCENE_FRAME_LEN] {
     frame
 }
 
-// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
 #[cfg(test)]
-mod predicted_multi_color {
+mod multi_color_tests {
     use super::*;
     use hex_literal::hex;
 
@@ -521,12 +520,30 @@ mod predicted_multi_color {
     const WHITE: Rgb = Rgb::new(0xff, 0xff, 0xff);
     const SEVEN: [Rgb; 7] = [RED, GREEN, BLUE, WHITE, RED, GREEN, BLUE];
 
+    /// Doubles each channel of a captured 50% frame, so scaling by 50 reproduces it.
+    fn colors_at_half(frame: &[u8]) -> Vec<Rgb> {
+        let data = &frame[2..2 + frame[0] as usize - 1];
+        data.chunks(3)
+            .map(|c| Rgb::new(c[0] * 2, c[1] * 2, c[2] * 2))
+            .collect()
+    }
+
+    // Captured 2026-10-24: the rainbow scene's 7 colors at brightness 50 under each effect.
     #[test]
-    fn multi_color_headers_match_prediction() {
-        let (header, _) = multi_color(0, false, 50, &[RED, GREEN, BLUE], 100).unwrap();
-        assert_eq!(encrypt(&header), hex!("c2e6147029409bbe4a5740f76a26975b"));
-        let (header, _) = multi_color(11, true, 100, &SEVEN, 50).unwrap();
-        assert_eq!(encrypt(&header), hex!("17b76b1e7a8707ec08851d411b77a409"));
+    fn multi_color_matches_capture() {
+        let rainbow = hex!("16007f00007f51007f7f00007f0000007f7f007f7f7f7f00");
+        let blinking = hex!("16007f00007f00007f7f00007f0000007f7f007f7f7f7f00");
+        for (effect, speed, frame, header) in [
+            (0, 0x50, &rainbow[..], hex!("78a285cda85bf710f8bcbb1eae183bd8")),
+            (1, 0x09, &blinking[..], hex!("7a0e16c5439b21ad54cf9a2e6745f1aa")),
+            (8, 0x50, &rainbow[..], hex!("173a9afca7ae6d41a8c794c4fdbb5c08")),
+            (9, 0x50, &rainbow[..], hex!("6912a67bf156ae6fbc63c7b36e5bfbcd")),
+        ] {
+            let (h, f) = multi_color(effect, false, speed, &colors_at_half(frame), 50).unwrap();
+            assert_eq!(encrypt(&h), header, "effect {effect}");
+            assert_eq!(&f[..frame.len()], frame, "effect {effect}");
+            assert!(f[frame.len()..].iter().all(|&b| b == 0));
+        }
     }
 
     #[test]

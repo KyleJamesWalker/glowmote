@@ -118,18 +118,19 @@ color 2 the background; frame period is `(100 − speed) + 20` ticks:
 
 ### `MULT` (scenes)
 
-Built by `MutilColorAgreement.sendMutilColor`. All three scenes captured (Christmas tree, reef,
-fence) sent `07` in byte 5.
+Built by `MutilColorAgreement.sendMutilColor`. Scenes captured on 2026-10-24 sent effects `00`, `01`,
+`07`, `08` and `09`, with 2 or 7 colors; see
+[`../captures/2026-10-24-isp-50542b-favorite-scenes-music-timer.txt`](../captures/2026-10-24-isp-50542b-favorite-scenes-music-timer.txt).
 
 | Byte | Field | Observed |
 |---|---|---|
 | 0 | length | `0a` |
 | 1–4 | tag | `MULT` |
-| 5 | effect (`modelIndex − 10`) | `07` |
+| 5 | effect (`modelIndex − 10`) | `00`, `01`, `07`–`09` |
 | 6 | direction (inverted "reverse" flag) | `00`, `01` |
 | 7 | brightness, 0–100 (the app always sends 100) | `64` |
 | 8 | speed, 0–100 | `00`–`64` |
-| 9 | color count, 1–7 | `02` |
+| 9 | color count, 1–7 | `02`, `07` |
 | 10 | brightness scaling of the frame colors (`saturation` in the app; ignored by the `TR2309` firmware) | `05`–`64` |
 
 The colors follow in a second step:
@@ -144,7 +145,7 @@ The colors follow in a second step:
 
 Example, 2 colors `ff00ff` and `1400cb` at brightness 29: `07 00 49 00 49 05 00 3a` + zeros.
 
-Effects by byte 5, read from the `TR2309` renderer (not yet captured; background is black). The
+Effects by byte 5, read from the `TR2309` renderer (0, 1, 7, 8 and 9 captured; background is black). The
 app's `modelIndex` 10, 11 and 12 map to effects 7, 8 and 9, 13–19 to 0–6, and 20–21 to 10–11:
 
 | Effect | Description |
