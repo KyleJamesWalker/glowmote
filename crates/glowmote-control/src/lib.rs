@@ -419,6 +419,27 @@ impl<R: Radio> Controller<R> {
         Ok(())
     }
 
+    /// One music level block, 1–100, for music driven by this computer's microphone. The first
+    /// block switches the light to music mode; send one about every 120 ms, as the vendor app does.
+    pub async fn music_level(&self, effect: u8, level: u8) -> Result<()> {
+        if !CAPTURED_MUSIC_EFFECTS.contains(&effect) {
+            return Err(Error::Invalid(format!(
+                "music effect {effect} is not captured yet"
+            )));
+        }
+        let block = ideal::rhythm(effect, level).map_err(|e| Error::Invalid(e.to_string()))?;
+        let mut slot = self.light.lock().await;
+        let light = slot.as_mut().ok_or(Error::NotConnected)?;
+        Ok(light.send_rhythm(&block).await?)
+    }
+
+    /// Leaves music mode (`RSTOPR`), restoring what was showing before.
+    pub async fn music_stop(&self) -> Result<()> {
+        let mut slot = self.light.lock().await;
+        let light = slot.as_mut().ok_or(Error::NotConnected)?;
+        Ok(light.send_unacked(&ideal::rhythm_stop()).await?)
+    }
+
     async fn send(&self, packet: ideal::Packet) -> Result<String> {
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
@@ -674,6 +695,20 @@ mod tests {
             ]
         );
         assert!(matches!(c.music(true, 3).await, Err(Error::Invalid(_))));
+    }
+
+    #[tokio::test]
+    async fn music_levels_stream_captured_effects_only() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        c.music_level(1, 40).await.unwrap();
+        c.music_stop().await.unwrap();
+        assert_eq!(
+            *log.lock().unwrap(),
+            [ideal::rhythm(1, 40).unwrap(), ideal::rhythm_stop()]
+        );
+        assert!(matches!(c.music_level(5, 40).await, Err(Error::Invalid(_))));
+        assert!(matches!(c.music_level(0, 0).await, Err(Error::Invalid(_))));
     }
 
     #[tokio::test]
