@@ -44,6 +44,7 @@
         <button role="tab" id="tab-color" aria-controls="panel-color" aria-selected="true">Color</button>
         <button role="tab" id="tab-diy" aria-controls="panel-diy" aria-selected="false">DIY</button>
         <button role="tab" id="tab-scenes" aria-controls="panel-scenes" aria-selected="false">Scenes</button>
+        <button role="tab" id="tab-music" aria-controls="panel-music" aria-selected="false">Music</button>
         <button role="tab" id="tab-timers" aria-controls="panel-timers" aria-selected="false">Timers</button>
         <button role="tab" id="tab-setup" aria-controls="panel-setup" aria-selected="false">Setup</button>
       </nav>
@@ -142,6 +143,21 @@
           <label class="inline toggle-row">Reverse <span class="switch"><input id="scene-reverse" type="checkbox"><span></span></span></label>
           <button id="scene-play" class="primary" type="button">Play</button>
         </div>
+      </section>
+
+      <section id="panel-music" class="card panel" role="tabpanel" aria-labelledby="tab-music" hidden>
+        <div class="row">
+          <div>
+            <h3>Music</h3>
+            <p class="hint">The light listens with its own microphone.</p>
+          </div>
+          <label class="switch"><input id="music-on" type="checkbox"><span></span><span class="sr">Music mode</span></label>
+        </div>
+        <div class="effects">
+          <h3>Effect</h3>
+          <div id="music-effects" class="chips" role="radiogroup" aria-label="Music effect"></div>
+        </div>
+        <p class="hint">Turning music off returns to what was showing before.</p>
       </section>
 
       <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>

@@ -298,6 +298,10 @@ mod tests {
             Ok(false)
         }
 
+        async fn send_rhythm(&mut self, _: &glowmote_core::ideal::Packet) -> anyhow::Result<()> {
+            Ok(())
+        }
+
         async fn send_diy_upload(
             &mut self,
             _: &glowmote_core::ideal::DiyUpload,

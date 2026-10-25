@@ -92,6 +92,11 @@ async fn diy_upload(c: Ctl<'_>, pixels: Vec<String>) -> CmdResult<()> {
     Ok(c.diy_upload(&pixels).await?)
 }
 
+#[tauri::command]
+async fn music(c: Ctl<'_>, on: bool, effect: u8) -> CmdResult<()> {
+    Ok(c.music(on, effect).await?)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -112,7 +117,8 @@ pub fn run() {
             diy,
             diy_pixel,
             diy_fill,
-            diy_upload
+            diy_upload,
+            music
         ])
         .run(tauri::generate_context!())
         .expect("error while running glowmote");

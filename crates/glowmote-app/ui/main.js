@@ -288,6 +288,18 @@ effectChips("scene-effects", SCENE_EFFECTS, SCENE_CAPTURED, sceneEffect, (mode) 
   resendScene();
 });
 
+// Music: the light's microphone drives the effect. Names are not known yet, only that 0-2 work.
+
+let musicEffect = 0;
+effectChips("music-effects", Array.from({ length: 10 }, (_, i) => `Effect ${i + 1}`), new Set([0, 1, 2]), 0, (mode) => {
+  musicEffect = mode;
+  if ($("music-on").checked) run("music", { on: true, effect: musicEffect });
+});
+$("music-on").addEventListener("change", () => {
+  if ($("music-on").checked) showPower(true);
+  run("music", { on: $("music-on").checked, effect: musicEffect });
+});
+
 // Tabs
 
 for (const tab of document.querySelectorAll('[role="tab"]')) {
