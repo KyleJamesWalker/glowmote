@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
 use btleplug::api::{Peripheral as _, WriteType};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use glowmote_ble::{Found, Light, characteristic, pick, scan};
 use glowmote_core::{Rgb, ideal};
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -90,6 +90,20 @@ enum Action {
         #[arg(long, default_value_t = 180, value_parser = clap::value_parser!(u16).range(1..=ideal::MAX_LEDS as i64))]
         leds: u16,
     },
+    /// Stream music levels for a fixed pattern instead of a microphone
+    Music {
+        /// Music effect, 0-9
+        #[arg(value_parser = clap::value_parser!(u8).range(0..ideal::RHYTHM_EFFECT_COUNT as i64))]
+        effect: u8,
+        /// Level pattern to stream
+        #[arg(value_enum)]
+        pattern: Pattern,
+        /// Seconds to stream
+        #[arg(long, default_value_t = 6)]
+        secs: u64,
+    },
+    /// Leave music mode, restoring the previous mode
+    MusicStop,
     /// Set every LED (DIY mode)
     Fill {
         /// RRGGBB hex, e.g. ff0000
@@ -101,6 +115,43 @@ enum Action {
         #[arg(long, default_value_t = 180, value_parser = clap::value_parser!(u16).range(1..=ideal::MAX_LEDS as i64))]
         leds: u16,
     },
+}
+
+/// The vendor app's pace for music level blocks.
+const MUSIC_TICK: Duration = Duration::from_millis(120);
+
+#[derive(Clone, Copy, ValueEnum)]
+enum Pattern {
+    /// Level 1 throughout
+    Quiet,
+    /// Level 100 throughout
+    Loud,
+    /// 1 up to 100 and back down, over 3 seconds each way
+    Ramp,
+    /// Alternate 1 and 100 every second
+    Beat,
+}
+
+impl Pattern {
+    fn level(self, tick: u64) -> u8 {
+        let elapsed = tick * MUSIC_TICK.as_millis() as u64;
+        match self {
+            Pattern::Quiet => 1,
+            Pattern::Loud => 100,
+            Pattern::Ramp => {
+                let phase = elapsed % 6000;
+                let up = if phase < 3000 { phase } else { 6000 - phase };
+                (1 + up * 99 / 3000) as u8
+            }
+            Pattern::Beat => {
+                if (elapsed / 1000).is_multiple_of(2) {
+                    100
+                } else {
+                    1
+                }
+            }
+        }
+    }
 }
 
 impl Action {
@@ -153,6 +204,28 @@ impl Action {
                 brightness,
                 leds,
             } => ideal::diy_fill(leds, rgb, brightness)?,
+            Action::Music {
+                effect,
+                pattern,
+                secs,
+            } => {
+                let ticks =
+                    Duration::from_secs(secs).as_millis() as u64 / MUSIC_TICK.as_millis() as u64;
+                for tick in 0..ticks {
+                    light
+                        .send_rhythm(&ideal::rhythm(effect, pattern.level(tick))?)
+                        .await?;
+                    tokio::time::sleep(MUSIC_TICK).await;
+                }
+                println!("sent {ticks} levels");
+                return Ok(());
+            }
+            Action::MusicStop => {
+                return light
+                    .send_unacked(&ideal::rhythm_stop())
+                    .await
+                    .map(|()| println!("sent"));
+            }
         };
         match light.send(&packet).await? {
             Some(tag) => println!("ok ({tag})"),
@@ -293,4 +366,22 @@ async fn probe(found: Found, pause: Duration) -> Result<()> {
     tokio::time::sleep(pause).await;
     step("done");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn patterns_stay_inside_1_to_100() {
+        for pattern in [Pattern::Quiet, Pattern::Loud, Pattern::Ramp, Pattern::Beat] {
+            for tick in 0..200 {
+                assert!((1..=100).contains(&pattern.level(tick)));
+            }
+        }
+        assert_eq!(Pattern::Ramp.level(0), 1);
+        assert_eq!(Pattern::Ramp.level(25), 100);
+        assert_eq!(Pattern::Beat.level(0), 100);
+        assert_eq!(Pattern::Beat.level(9), 1);
+    }
 }

@@ -33,6 +33,10 @@ printf 'diy\nfill 00ff00\npixel 0 ff0000\npixel 179 ff0000 -b 80\nquit\n' | carg
 
 `scene ff3b30 34c759 --speed 60` plays the two-color effect. `pixel` and `fill` default to 50% brightness and a 180-LED strip (`--leds`).
 
+`music 2 ramp` streams a fixed level pattern (`quiet`, `loud`, `ramp`, `beat`) to music effect 2 for
+6 seconds (`--secs`), to see how an effect reacts without a microphone. `music-stop` restores the
+previous mode.
+
 On macOS the first run asks for Bluetooth permission for your terminal.
 
 ## Desktop app
