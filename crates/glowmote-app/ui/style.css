@@ -336,3 +336,6 @@ input.text {
   position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 700;
   color: #fff; text-shadow: 0 0 3px rgb(0 0 0 / .8);
 }
+
+.meter { height: 8px; border-radius: 999px; background: rgb(128 128 128 / .2); overflow: hidden; }
+.meter span { display: block; height: 100%; width: var(--level, 0%); background: var(--accent); transition: width 80ms linear; }

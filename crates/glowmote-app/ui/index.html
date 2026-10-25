@@ -149,15 +149,25 @@
         <div class="row">
           <div>
             <h3>Music</h3>
-            <p class="hint">The light listens with its own microphone.</p>
+            <p class="hint">Turning music off returns to what was showing before.</p>
           </div>
           <label class="switch"><input id="music-on" type="checkbox"><span></span><span class="sr">Music mode</span></label>
+        </div>
+        <div class="chips" role="radiogroup" aria-label="Listen with">
+          <button id="source-here" type="button" role="radio" aria-checked="true">This computer's microphone</button>
+          <button id="source-light" type="button" role="radio" aria-checked="false">The light's microphone</button>
+        </div>
+        <div id="here-controls" class="stack">
+          <div class="slider">
+            <label for="sensitivity">Sensitivity <output id="sensitivity-value">50%</output></label>
+            <input id="sensitivity" type="range" min="1" max="100" value="50">
+          </div>
+          <div class="meter" aria-hidden="true"><span id="music-meter"></span></div>
         </div>
         <div class="effects">
           <h3>Effect</h3>
           <div id="music-effects" class="chips" role="radiogroup" aria-label="Music effect"></div>
         </div>
-        <p class="hint">Turning music off returns to what was showing before.</p>
       </section>
 
       <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>

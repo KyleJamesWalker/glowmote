@@ -4,5 +4,7 @@
 <dict>
   <key>NSBluetoothAlwaysUsageDescription</key>
   <string>glowmote uses Bluetooth to control your LED lights.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>glowmote listens to the microphone to drive the lights' music mode.</string>
 </dict>
 </plist>
