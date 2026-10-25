@@ -15,7 +15,8 @@ memory map and mask-ROM symbols, then find functions the auto-analysis misses.
    printf 'name=ghidra-jieli\nversion=12.2\n' > "$ext/extension.properties"
    ```
    `q32s.patch` adds the group-7 shifts, `clz`, compare-with-immediate branches and stack forms the
-   module lacks, and masks call targets to the 25-bit bus. With it, 9746 of 9747 instructions in
+   module lacks, and masks call targets to the 25-bit bus. It also fixes the stock module's `jls` (unsigned `<=`)
+   and `jge` (signed `>=`) conditions, which were inverted. With it, 9746 of 9747 instructions in
    JieLi's `rom.lst` decode to the listed length.
 3. Compile it: `source tools/ghidra/env.sh && cd "$ext/data/languages" && "$G/support/sleigh" q32s.slaspec`
 4. Clone [Jieli-Tech/fw-AC63_BT_SDK](https://github.com/Jieli-Tech/fw-AC63_BT_SDK) for `cpu/bd19/tools/rom.lst`
