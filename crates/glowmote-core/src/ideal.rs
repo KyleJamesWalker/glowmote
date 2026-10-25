@@ -773,14 +773,18 @@ pub fn rhythm_stop() -> Packet {
     tagged(b"RSTOPR", &[])
 }
 
-/// Switches music mode to the light's own microphone (`MIC 01 64 00`), or back off (`MIC 00`),
-/// as the app's microphone toggle does. Not acknowledged.
-pub fn light_microphone(on: bool) -> Packet {
-    if on {
-        tagged(b"MIC", &[1, 100, 0])
-    } else {
-        tagged(b"MIC", &[0])
-    }
+/// Music mode on the light's own microphone (`MIC 01 <sensitivity> <effect>`), as the app's
+/// microphone toggle sends it. Sensitivity is 0–100; the firmware divides by `2200 − 16 ×
+/// sensitivity`, so values over 137 would make it negative. Not acknowledged.
+pub fn light_microphone(sensitivity: u8, effect: u8) -> Result<Packet, OutOfRange> {
+    check("microphone sensitivity", sensitivity, 0, 100)?;
+    check("rhythm effect", effect, 0, RHYTHM_EFFECT_COUNT as u16 - 1)?;
+    Ok(tagged(b"MIC", &[1, sensitivity, effect]))
+}
+
+/// Stops the light's microphone (`MIC 00`); the light stays in music mode until [`rhythm_stop`].
+pub fn light_microphone_off() -> Packet {
+    tagged(b"MIC", &[0])
 }
 
 #[cfg(test)]
@@ -808,13 +812,20 @@ mod rhythm_tests {
     #[test]
     fn light_microphone_matches_capture() {
         assert_eq!(
-            encrypt(&light_microphone(true)),
+            encrypt(&light_microphone(100, 0).unwrap()),
             hex!("726e1c8c4da1f77727ee35abcb448fa7")
         );
         assert_eq!(
-            encrypt(&light_microphone(false)),
+            encrypt(&light_microphone_off()),
             hex!("a6207a5cb9b6336ca99cf1cb5c304752")
         );
+    }
+
+    #[test]
+    fn light_microphone_rejects_out_of_range_fields() {
+        assert!(light_microphone(100, RHYTHM_EFFECT_COUNT - 1).is_ok());
+        assert!(light_microphone(101, 0).is_err());
+        assert!(light_microphone(50, RHYTHM_EFFECT_COUNT).is_err());
     }
 
     #[test]

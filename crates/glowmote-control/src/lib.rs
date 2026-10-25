@@ -432,18 +432,17 @@ impl<R: Radio> Controller<R> {
         }
     }
 
-    /// Music mode driven by the light's own microphone. As in the vendor app, one level block
-    /// picks the effect and enters music mode before `MIC` switches to the light's microphone.
-    /// Turning it off restores the previous mode.
-    pub async fn music(&self, on: bool, effect: u8) -> Result<()> {
+    /// Music mode driven by the light's own microphone, with sensitivity 0–100. Turning it off
+    /// restores the previous mode.
+    pub async fn music(&self, on: bool, effect: u8, sensitivity: u8) -> Result<()> {
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
         if on {
-            let level = ideal::rhythm(effect, 1).map_err(|e| Error::Invalid(e.to_string()))?;
-            light.send_rhythm(&level).await?;
-            light.send_unacked(&ideal::light_microphone(true)).await?;
+            let mic = ideal::light_microphone(sensitivity, effect)
+                .map_err(|e| Error::Invalid(e.to_string()))?;
+            light.send_unacked(&mic).await?;
         } else {
-            light.send_unacked(&ideal::light_microphone(false)).await?;
+            light.send_unacked(&ideal::light_microphone_off()).await?;
             light.send_unacked(&ideal::rhythm_stop()).await?;
         }
         Ok(())
@@ -727,21 +726,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn music_uses_the_captured_sequence() {
+    async fn music_uses_the_light_microphone() {
         let (c, log) = controller(vec!["ISP-1"]);
         c.connect_matching(None).await.unwrap();
-        c.music(true, 2).await.unwrap();
-        c.music(false, 2).await.unwrap();
+        c.music(true, 2, 70).await.unwrap();
+        c.music(false, 2, 70).await.unwrap();
         assert_eq!(
             *log.lock().unwrap(),
             [
-                ideal::rhythm(2, 1).unwrap(),
-                ideal::light_microphone(true),
-                ideal::light_microphone(false),
+                ideal::light_microphone(70, 2).unwrap(),
+                ideal::light_microphone_off(),
                 ideal::rhythm_stop(),
             ]
         );
-        assert!(matches!(c.music(true, 10).await, Err(Error::Invalid(_))));
+        assert!(matches!(
+            c.music(true, 10, 50).await,
+            Err(Error::Invalid(_))
+        ));
+        assert!(matches!(
+            c.music(true, 0, 101).await,
+            Err(Error::Invalid(_))
+        ));
     }
 
     #[tokio::test]

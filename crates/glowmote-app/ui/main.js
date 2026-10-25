@@ -320,7 +320,12 @@ $("effect-speed").addEventListener("input", () => {
 for (const id of ["effect-second", "effect-reverse"]) $(id).addEventListener("input", () => sendColor());
 
 // Music: this computer's microphone streams levels to the light, or the light listens itself.
-// Effect names are not known yet; 0-2 are captured.
+// Effect names come from the firmware's renderers; 0-2 are captured.
+
+const MUSIC_EFFECTS = [
+  "Color comets", "Center-out comets", "Edge-in pulses", "Beat flash", "Dot stream",
+  "Level meter", "Center meter", "Rainbow center meter", "Cycling center meter", "Edge-in meter",
+];
 
 let musicEffect = 0;
 let musicSource = "here";
@@ -386,19 +391,21 @@ async function setMusic(on) {
   } else if (musicSource === "here") {
     await run("listen", { on, ...musicArgs() });
   } else {
-    await run("music", { on, effect: musicEffect });
+    await run("music", { on, ...musicArgs() });
   }
   if (!on) $("music-meter").style.setProperty("--level", "0%");
 }
 
-effectChips("music-effects", Array.from({ length: 10 }, (_, i) => `Effect ${i + 1}`), new Set([0, 1, 2]), 0, (mode) => {
+effectChips("music-effects", MUSIC_EFFECTS, new Set([0, 1, 2]), 0, (mode) => {
   musicEffect = mode;
   if ($("music-on").checked) setMusic(true);
 });
 $("music-on").addEventListener("change", () => setMusic($("music-on").checked));
 $("sensitivity").addEventListener("input", () => {
   $("sensitivity-value").textContent = `${$("sensitivity").value}%`;
-  if ($("music-on").checked && musicSource === "here" && !WEB_AUDIO) run("listen", { on: true, ...musicArgs() });
+  if (!$("music-on").checked) return;
+  if (musicSource === "light") run("music", { on: true, ...musicArgs() });
+  else if (!WEB_AUDIO) run("listen", { on: true, ...musicArgs() });
 });
 for (const [id, source] of [["source-here", "here"], ["source-light", "light"]]) {
   $(id).addEventListener("click", async () => {
@@ -408,7 +415,7 @@ for (const [id, source] of [["source-here", "here"], ["source-light", "light"]])
     musicSource = source;
     $("source-here").setAttribute("aria-checked", String(source === "here"));
     $("source-light").setAttribute("aria-checked", String(source === "light"));
-    $("here-controls").hidden = source !== "here";
+    $("music-meter").parentElement.hidden = source !== "here";
     if (wasOn) await setMusic(true);
   });
 }

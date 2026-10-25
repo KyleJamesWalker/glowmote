@@ -112,8 +112,8 @@ async fn diy_upload(c: Ctl<'_>, pixels: Vec<String>) -> CmdResult<()> {
 }
 
 #[tauri::command]
-async fn music(c: Ctl<'_>, on: bool, effect: u8) -> CmdResult<()> {
-    Ok(c.music(on, effect).await?)
+async fn music(c: Ctl<'_>, on: bool, effect: u8, sensitivity: u8) -> CmdResult<()> {
+    Ok(c.music(on, effect, sensitivity).await?)
 }
 
 #[cfg(not(target_os = "android"))]
