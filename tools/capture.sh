@@ -27,6 +27,7 @@ check() {
   case $mode in
     full) echo "ready: toggle Bluetooth off and on if you changed the setting, then use the vendor app" ;;
     filtered) die "set Developer options > Enable Bluetooth HCI snoop log to Enabled, not Filtered" ;;
+    "") echo "unknown: this Android version hides the setting; check Developer options shows Enabled" ;;
     *) die "turn on Developer options > Enable Bluetooth HCI snoop log, then toggle Bluetooth" ;;
   esac
 }
@@ -48,7 +49,7 @@ pull() {
   local name=$1 tmp
   phone
   tmp=$(mktemp -d)
-  trap 'rm -rf "$tmp"' EXIT
+  trap "rm -rf '$tmp'" EXIT
   echo "collecting a bug report (about 2 minutes)..."
   (cd "$tmp" && adb bugreport bug.zip >/dev/null)
   unzip -q -j "$tmp/bug.zip" 'FS/data/misc/bluetooth/logs/btsnoop_hci.log' -d "$tmp" \
