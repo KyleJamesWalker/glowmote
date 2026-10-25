@@ -202,7 +202,17 @@ async fn listen(
 #[tauri::command]
 async fn listen(on: bool, effect: u8, sensitivity: u8) -> CmdResult<()> {
     let _ = (on, effect, sensitivity);
-    Err("listening with this device's microphone is not supported on Android yet".into())
+    Err("on Android the web view listens instead; use music_level".into())
+}
+
+#[tauri::command]
+async fn music_level(c: Ctl<'_>, effect: u8, level: u8) -> CmdResult<()> {
+    Ok(c.music_level(effect, level).await?)
+}
+
+#[tauri::command]
+async fn music_stop(c: Ctl<'_>) -> CmdResult<()> {
+    Ok(c.music_stop().await?)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -231,7 +241,9 @@ pub fn run() {
             diy_upload,
             diy_animate,
             music,
-            listen
+            listen,
+            music_level,
+            music_stop
         ])
         .run(tauri::generate_context!())
         .expect("error while running glowmote");

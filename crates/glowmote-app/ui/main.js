@@ -329,9 +329,61 @@ function musicArgs() {
   return { effect: musicEffect, sensitivity: Number($("sensitivity").value) };
 }
 
+// Android has no native audio capture here, so the web view measures the microphone itself.
+const WEB_AUDIO = /Android/.test(navigator.userAgent);
+const TICK_MS = 120;
+let webListen = null;
+
+async function startWebListen() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+  });
+  const context = new AudioContext();
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 1024;
+  context.createMediaStreamSource(stream).connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  let peak = 0;
+  let sending = false;
+  const sample = setInterval(() => {
+    analyser.getFloatTimeDomainData(samples);
+    peak = Math.max(peak, Math.sqrt(samples.reduce((sum, v) => sum + v * v, 0) / samples.length));
+  }, 30);
+  await run("music_stop");
+  const send = setInterval(async () => {
+    const db = peak > 0 ? 20 * Math.log10(peak) : -Infinity;
+    peak = 0;
+    const loudness = Math.min(1, Math.max(0, (db + 60) / 60));
+    const level = Math.round(Math.min(100, Math.max(1, loudness * (Number($("sensitivity").value) / 50) * 100)));
+    $("music-meter").style.setProperty("--level", `${level}%`);
+    if (sending) return;
+    sending = true;
+    await run("music_level", { effect: musicEffect, level });
+    sending = false;
+  }, TICK_MS);
+  webListen = { stream, context, timers: [sample, send] };
+}
+
+async function stopWebListen() {
+  if (!webListen) return;
+  webListen.timers.forEach(clearInterval);
+  webListen.stream.getTracks().forEach((track) => track.stop());
+  await webListen.context.close();
+  webListen = null;
+  await run("music_stop");
+}
+
 async function setMusic(on) {
   if (on) showPower(true);
-  if (musicSource === "here") {
+  if (musicSource === "here" && WEB_AUDIO) {
+    try {
+      if (on && !webListen) await startWebListen();
+      if (!on) await stopWebListen();
+    } catch (e) {
+      $("music-on").checked = false;
+      setStatus(`Microphone: ${e.message ?? e}`, true);
+    }
+  } else if (musicSource === "here") {
     await run("listen", { on, ...musicArgs() });
   } else {
     await run("music", { on, effect: musicEffect });
@@ -346,7 +398,7 @@ effectChips("music-effects", Array.from({ length: 10 }, (_, i) => `Effect ${i + 
 $("music-on").addEventListener("change", () => setMusic($("music-on").checked));
 $("sensitivity").addEventListener("input", () => {
   $("sensitivity-value").textContent = `${$("sensitivity").value}%`;
-  if ($("music-on").checked && musicSource === "here") run("listen", { on: true, ...musicArgs() });
+  if ($("music-on").checked && musicSource === "here" && !WEB_AUDIO) run("listen", { on: true, ...musicArgs() });
 });
 for (const [id, source] of [["source-here", "here"], ["source-light", "light"]]) {
   $(id).addEventListener("click", async () => {
