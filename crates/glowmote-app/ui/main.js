@@ -292,9 +292,16 @@ function effectChips(container, names, captured, selected, onPick) {
 }
 
 let sceneEffect = 7;
+// The vendor app's default background per mode for this light (LightColorCore, type 3).
+const EFFECT_BACKGROUNDS = [
+  "#ff0000", "#0000ff", "#ffffff", "#000000", "#000000",
+  "#0000ff", "#00ff00", "#ff00ff", "#00ff00", "#0000ff",
+];
+
 let colorEffect = 0;
 effectChips("color-effects", COLOR_EFFECTS, COLOR_CAPTURED, colorEffect, (mode) => {
   colorEffect = mode;
+  $("effect-second").value = EFFECT_BACKGROUNDS[mode];
   $("effect-controls").hidden = mode === 0;
   if (onColorTab()) {
     showPower(true);
