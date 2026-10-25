@@ -654,28 +654,23 @@ pub fn timers(on: Option<Timer>, off: Option<Timer>) -> Result<Packet, OutOfRang
     Ok(tagged(b"SCHD", &args))
 }
 
-// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
 #[cfg(test)]
-mod predicted_timers {
+mod timer_tests {
     use super::*;
     use hex_literal::hex;
 
-    const WEEKDAYS: u8 = 0b001_1111;
-
+    // Captured 2026-10-24: on at 19:00 and off at 23:00, every day.
     #[test]
-    fn timers_match_prediction() {
-        assert_eq!(
-            encrypt(&timers(None, None).unwrap()),
-            hex!("295e35acf7ddc93744c6fe93746bdece")
-        );
+    fn timers_match_capture() {
         let on = Timer {
-            hour: 7,
-            minute: 30,
-            days: WEEKDAYS,
+            hour: 19,
+            minute: 0,
+            days: 0x7f,
         };
+        let off = Timer { hour: 23, ..on };
         assert_eq!(
-            encrypt(&timers(Some(on), None).unwrap()),
-            hex!("4c75ab6068f1332cee459a1d6d7e2bbc")
+            encrypt(&timers(Some(on), Some(off)).unwrap()),
+            hex!("d978305bd8db034ae6b09a010e25c994")
         );
         let ack = decrypt(&hex!("761610f8ae440c3f82023e61cdb75339"));
         assert_eq!(parse_ack(&ack), Some("SCHD"));

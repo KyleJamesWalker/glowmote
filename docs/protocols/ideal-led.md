@@ -207,6 +207,15 @@ keeps favorites itself. From `DiyAgreement` and the `TR2309` handler:
 - After `DOOTCPOK` the app sends `DTARTCY 01`; on timeout it sends `DTARTCY 00`, which restores
   the previous mode.
 
+### `SCHD` (on and off timers)
+
+Captured on 2026-10-24: on at 19:00 and off at 23:00, every day, sent
+`0c 'SCHD' 01 7f 13 00 01 7f 17 00` + zeros (`d978305bd8db034ae6b09a010e25c994`), acked with
+`SCHDOK`. The layout is `onEn onMask onH onM offEn offMask offH offM`. From the app and the
+`TR2309` firmware, not yet captured: mask bit 0 is Monday; mask 0 fires once, today or tomorrow
+if the hour has passed; timers fire against the `TIME` clock. The app's builder is
+`getTimerLightSwitch`.
+
 ## Acknowledgements
 
 Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. Only the first
@@ -244,7 +253,6 @@ the reference device byte for byte, so the rest likely carry over. Each reply be
 
 | Command (plaintext) | Purpose | Notes |
 |---|---|---|
-| `0c 'SCHD' onEn onMask onH onM offEn offMask offH offM 00 00 00` | on and off timers | Week mask bit 0 = Monday. Mask 0 = once: the firmware picks today, or tomorrow if the hour has passed. Fires against the `TIME` clock. The app's builder is `getTimerLightSwitch`; `SCHL`/`SCH0` was a misreading |
 | `06 'LAMPT' type volt rate` | LED chip type | **type 0–4 only** (WS2812B, SK6813, SM16703, UCS1903B, QS2633) |
 | `09 'LAMPN' seg_hi seg_lo total_hi total_lo` | LEDs per segment and total | keep total ≤ 400 (`TR2210` rejects more with `LAMPNMAX`) |
 | `05 'LAMPQ'` | query type and capabilities | reply `07 'LAMPQ' type volt 00` then 480, 160, 100, 140 (u16 LE) |
