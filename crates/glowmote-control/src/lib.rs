@@ -33,6 +33,9 @@ impl From<Error> for String {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// `MULT` effects seen in a vendor app capture; the firmware has 12.
+pub const CAPTURED_SCENE_EFFECTS: [u8; 5] = [0, 1, 7, 8, 9];
+
 /// Finds and opens lights. [`Ble`] is the real one; tests substitute a fake.
 pub trait Radio: Send + Sync + 'static {
     type Found: Clone + Send;
@@ -246,6 +249,36 @@ impl<R: Radio> Controller<R> {
         }
     }
 
+    /// A scene with any captured effect and 1 to 7 colors.
+    pub async fn scene_effect(
+        &self,
+        effect: u8,
+        colors: &[String],
+        speed: u8,
+        brightness: u8,
+        reverse: bool,
+    ) -> Result<()> {
+        if !CAPTURED_SCENE_EFFECTS.contains(&effect) {
+            return Err(Error::Invalid(format!(
+                "scene effect {effect} is not captured yet"
+            )));
+        }
+        let colors = colors
+            .iter()
+            .map(|c| parse(c))
+            .collect::<Result<Vec<_>>>()?;
+        let (header, frame) = ideal::multi_color(effect, reverse, speed, &colors, brightness)
+            .map_err(|e| Error::Invalid(e.to_string()))?;
+        let mut slot = self.light.lock().await;
+        let light = slot.as_mut().ok_or(Error::NotConnected)?;
+        match light.send_scene(&header, &frame).await? {
+            true => Ok(()),
+            false => Err(Error::Device(
+                "the light did not confirm the scene colors".into(),
+            )),
+        }
+    }
+
     /// Enters or leaves DIY mode; `keep_drawing` only matters when leaving.
     pub async fn diy(&self, on: bool, keep_drawing: bool) -> Result<()> {
         let packet = if on {
@@ -426,6 +459,28 @@ mod tests {
                 ideal::diy_pixel(3, Rgb::new(0, 0xff, 0), 50).unwrap(),
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn scene_effects_are_limited_to_captured_ones() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        let colors = ["ff0000".to_string(), "00ff00".to_string()];
+        c.scene_effect(8, &colors, 50, 100, false).await.unwrap();
+        let red_green = [Rgb::new(0xff, 0, 0), Rgb::new(0, 0xff, 0)];
+        let (header, _) = ideal::multi_color(8, false, 50, &red_green, 100).unwrap();
+        assert_eq!(*log.lock().unwrap(), [header]);
+        for effect in [2, 10, 12] {
+            assert!(matches!(
+                c.scene_effect(effect, &colors, 50, 100, false).await,
+                Err(Error::Invalid(_))
+            ));
+        }
+        assert!(matches!(
+            c.scene_effect(0, &[], 50, 100, false).await,
+            Err(Error::Invalid(_))
+        ));
+        assert_eq!(log.lock().unwrap().len(), 1);
     }
 
     #[tokio::test]

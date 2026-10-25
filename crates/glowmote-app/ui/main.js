@@ -261,10 +261,10 @@ const SCENE_EFFECTS = [
   "Scrolling bands", "Twinkle", "Color wipe", "Curtain", "Chasing dots", "Bar pass",
   "Stacking fill", "Meteor tails", "Pulse waves", "Gradient flow", "Jump", "Breathe",
 ];
-const SCENE_CAPTURED = new Set([7]);
+const SCENE_CAPTURED = new Set([0, 1, 7, 8, 9]);
 
-function effectChips(container, names, captured, selected) {
-  $(container).replaceChildren(...names.map((name, mode) => {
+function effectChips(container, names, captured, selected, onPick) {
+  const chips = names.map((name, mode) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.setAttribute("role", "radio");
@@ -272,12 +272,21 @@ function effectChips(container, names, captured, selected) {
     chip.textContent = name;
     chip.disabled = !captured.has(mode);
     chip.title = chip.disabled ? `Mode ${mode}: needs a capture before glowmote can send it` : `Mode ${mode}`;
+    chip.addEventListener("click", () => {
+      for (const c of chips) c.setAttribute("aria-checked", String(c === chip));
+      onPick?.(mode);
+    });
     return chip;
-  }));
+  });
+  $(container).replaceChildren(...chips);
 }
 
+let sceneEffect = 7;
 effectChips("color-effects", COLOR_EFFECTS, COLOR_CAPTURED, 0);
-effectChips("scene-effects", SCENE_EFFECTS, SCENE_CAPTURED, 7);
+effectChips("scene-effects", SCENE_EFFECTS, SCENE_CAPTURED, sceneEffect, (mode) => {
+  sceneEffect = mode;
+  resendScene();
+});
 
 // Tabs
 
@@ -296,14 +305,37 @@ for (const tab of document.querySelectorAll('[role="tab"]')) {
 
 // Scenes
 
+const RAINBOW = ["#ff0000", "#ffa200", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff"];
 const SCENE_PRESETS = [
-  ["Holiday", "#ff3b30", "#34c759"],
-  ["Candy cane", "#ff3b30", "#ffffff"],
-  ["Ocean", "#007aff", "#00c7be"],
-  ["Sunset", "#ff9500", "#ff2d92"],
-  ["Spooky", "#ff9500", "#af52de"],
-  ["Ice", "#ffffff", "#30b0ff"],
+  ["Rainbow", RAINBOW],
+  ["Holiday", ["#ff3b30", "#34c759"]],
+  ["Candy cane", ["#ff3b30", "#ffffff"]],
+  ["Ocean", ["#007aff", "#00c7be", "#ffffff"]],
+  ["Sunset", ["#ff9500", "#ff2d92", "#af52de"]],
+  ["Spooky", ["#ff9500", "#af52de", "#34c759"]],
+  ["Ice", ["#ffffff", "#30b0ff"]],
 ];
+const MAX_SCENE_COLORS = 7;
+
+function sceneColors() {
+  return [...$("scene-colors").querySelectorAll("input")].map((input) => input.value);
+}
+
+function setSceneColors(colors) {
+  $("scene-colors").replaceChildren(...colors.map((hex, i) => {
+    const well = document.createElement("label");
+    well.className = "well";
+    const input = document.createElement("input");
+    input.type = "color";
+    input.value = hex;
+    input.setAttribute("aria-label", `Color ${i + 1}`);
+    input.addEventListener("input", resendScene);
+    well.append(input);
+    return well;
+  }));
+  $("scene-add").disabled = colors.length >= MAX_SCENE_COLORS;
+  $("scene-remove").disabled = colors.length <= 1;
+}
 
 let scenePlaying = false;
 let sceneInFlight = false;
@@ -314,9 +346,9 @@ async function sendScene() {
   sceneInFlight = true;
   while (sceneQueued) {
     sceneQueued = false;
-    await run("scene", {
-      first: balance($("scene-first").value),
-      second: balance($("scene-second").value),
+    await run("scene_effect", {
+      effect: sceneEffect,
+      colors: sceneColors().map(balance),
       speed: Number($("scene-speed").value),
       brightness: Number($("scene-brightness").value),
       reverse: $("scene-reverse").checked,
@@ -331,19 +363,22 @@ function playScene() {
   sendScene();
 }
 
-const resendScene = () => { if (scenePlaying) sendScene(); };
+function resendScene() {
+  if (scenePlaying) sendScene();
+}
 
-$("scene-presets").replaceChildren(...SCENE_PRESETS.map(([name, a, b]) => {
+const stops = (colors) => colors.map((c, i) =>
+  `${c} ${(i * 100) / colors.length}% ${((i + 1) * 100) / colors.length}%`).join(", ");
+
+$("scene-presets").replaceChildren(...SCENE_PRESETS.map(([name, colors]) => {
   const button = document.createElement("button");
   button.type = "button";
   const duo = document.createElement("span");
   duo.className = "duo";
-  duo.style.setProperty("--a", a);
-  duo.style.setProperty("--b", b);
+  duo.style.setProperty("--stops", stops(colors));
   button.append(duo, name);
   button.addEventListener("click", () => {
-    $("scene-first").value = a;
-    $("scene-second").value = b;
+    setSceneColors(colors);
     playScene();
   });
   return button;
@@ -355,13 +390,17 @@ for (const [id, unit] of [["scene-speed", "%"], ["scene-brightness", "%"]]) {
     resendScene();
   });
 }
-for (const id of ["scene-first", "scene-second", "scene-reverse"]) {
-  $(id).addEventListener("input", resendScene);
-}
-$("scene-swap").addEventListener("click", () => {
-  [$("scene-first").value, $("scene-second").value] = [$("scene-second").value, $("scene-first").value];
+$("scene-reverse").addEventListener("input", resendScene);
+$("scene-add").addEventListener("click", () => {
+  const colors = sceneColors();
+  setSceneColors([...colors, colors.at(-1)]);
   resendScene();
 });
+$("scene-remove").addEventListener("click", () => {
+  setSceneColors(sceneColors().slice(0, -1));
+  resendScene();
+});
+setSceneColors(SCENE_PRESETS[1][1]);
 $("scene-play").addEventListener("click", playScene);
 
 // DIY

@@ -44,15 +44,16 @@ async fn color(c: Ctl<'_>, rgb: String, brightness: u8) -> CmdResult<String> {
 }
 
 #[tauri::command]
-async fn scene(
+async fn scene_effect(
     c: Ctl<'_>,
-    first: String,
-    second: String,
+    effect: u8,
+    colors: Vec<String>,
     speed: u8,
     brightness: u8,
     reverse: bool,
 ) -> CmdResult<()> {
-    Ok(c.scene(&first, &second, speed, brightness, reverse).await?)
+    Ok(c.scene_effect(effect, &colors, speed, brightness, reverse)
+        .await?)
 }
 
 #[tauri::command]
@@ -91,7 +92,7 @@ pub fn run() {
             info,
             power,
             color,
-            scene,
+            scene_effect,
             diy,
             diy_pixel,
             diy_fill

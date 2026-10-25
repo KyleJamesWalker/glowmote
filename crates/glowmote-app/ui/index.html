@@ -115,13 +115,15 @@
 
       <section id="panel-scenes" class="card panel" role="tabpanel" aria-labelledby="tab-scenes" hidden>
         <div>
-          <h3>Two-color effect</h3>
-          <p class="hint">Pick two colors and an effect, then play.</p>
+          <h3>Scene</h3>
+          <p class="hint">Pick up to seven colors and an effect, then play.</p>
         </div>
-        <div class="pair">
-          <label class="well"><input id="scene-first" type="color" value="#ff3b30"><span>First</span></label>
-          <button id="scene-swap" class="ghost" type="button" aria-label="Swap colors">⇄</button>
-          <label class="well"><input id="scene-second" type="color" value="#34c759"><span>Second</span></label>
+        <div class="scene-colors">
+          <div id="scene-colors" class="wells"></div>
+          <div class="row">
+            <button id="scene-remove" class="ghost" type="button" aria-label="Remove last color">−</button>
+            <button id="scene-add" class="ghost" type="button" aria-label="Add a color">+</button>
+          </div>
         </div>
         <div class="presets" id="scene-presets"></div>
         <div class="effects">
