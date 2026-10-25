@@ -10,7 +10,7 @@ use axum::http::{StatusCode, Uri, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
-use glowmote_control::{Controller, Error, Radio};
+use glowmote_control::{Controller, Error, LocalTime, Radio, TimerSetting};
 use include_dir::{Dir, include_dir};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
@@ -50,6 +50,14 @@ pub fn router<R: Radio>(controller: Arc<Controller<R>>) -> Router {
         .route("/api/diy", post(diy::<R>))
         .route("/api/diy_pixel", post(diy_pixel::<R>))
         .route("/api/diy_fill", post(diy_fill::<R>))
+        .route("/api/diy_upload", post(diy_upload::<R>))
+        .route("/api/diy_animate", post(diy_animate::<R>))
+        .route("/api/effect", post(effect::<R>))
+        .route("/api/scene_effect", post(scene_effect::<R>))
+        .route("/api/timers", post(timers::<R>))
+        .route("/api/music", post(music::<R>))
+        .route("/api/music_level", post(music_level::<R>))
+        .route("/api/music_stop", post(music_stop::<R>))
         .route("/api/{*command}", any(unknown_command))
         .method_not_allowed_fallback(method_not_allowed)
         .fallback(get(static_file))
@@ -154,6 +162,57 @@ struct Fill {
     brightness: u8,
 }
 
+#[derive(Deserialize)]
+struct Upload {
+    pixels: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct Animate {
+    pixels: Vec<String>,
+    mode: u8,
+    speeds: Vec<u8>,
+}
+
+#[derive(Deserialize)]
+struct Effect {
+    mode: u8,
+    first: String,
+    second: String,
+    speed: u8,
+    brightness: u8,
+    reverse: bool,
+}
+
+#[derive(Deserialize)]
+struct SceneEffect {
+    effect: u8,
+    colors: Vec<String>,
+    speed: u8,
+    brightness: u8,
+    reverse: bool,
+}
+
+#[derive(Deserialize)]
+struct Timers {
+    now: LocalTime,
+    on: Option<TimerSetting>,
+    off: Option<TimerSetting>,
+}
+
+#[derive(Deserialize)]
+struct Music {
+    on: bool,
+    effect: u8,
+    sensitivity: u8,
+}
+
+#[derive(Deserialize)]
+struct Level {
+    effect: u8,
+    level: u8,
+}
+
 async fn status<R: Radio>(State(c): Ctl<R>) -> Reply {
     Ok(Json(json!({ "ok": c.status().await })))
 }
@@ -204,6 +263,51 @@ async fn diy_pixel<R: Radio>(State(c): Ctl<R>, Args(a): Args<Pixel>) -> Reply {
 
 async fn diy_fill<R: Radio>(State(c): Ctl<R>, Args(a): Args<Fill>) -> Reply {
     reply(c.diy_fill(a.leds, &a.rgb, a.brightness).await)
+}
+
+async fn diy_upload<R: Radio>(State(c): Ctl<R>, Args(a): Args<Upload>) -> Reply {
+    reply(c.diy_upload(&a.pixels).await)
+}
+
+async fn diy_animate<R: Radio>(State(c): Ctl<R>, Args(a): Args<Animate>) -> Reply {
+    reply(c.diy_animate(&a.pixels, a.mode, &a.speeds).await)
+}
+
+async fn effect<R: Radio>(State(c): Ctl<R>, Args(a): Args<Effect>) -> Reply {
+    reply(
+        c.effect(
+            a.mode,
+            &a.first,
+            &a.second,
+            a.speed,
+            a.brightness,
+            a.reverse,
+        )
+        .await,
+    )
+}
+
+async fn scene_effect<R: Radio>(State(c): Ctl<R>, Args(a): Args<SceneEffect>) -> Reply {
+    reply(
+        c.scene_effect(a.effect, &a.colors, a.speed, a.brightness, a.reverse)
+            .await,
+    )
+}
+
+async fn timers<R: Radio>(State(c): Ctl<R>, Args(a): Args<Timers>) -> Reply {
+    reply(c.timers(a.now, a.on, a.off).await)
+}
+
+async fn music<R: Radio>(State(c): Ctl<R>, Args(a): Args<Music>) -> Reply {
+    reply(c.music(a.on, a.effect, a.sensitivity).await)
+}
+
+async fn music_level<R: Radio>(State(c): Ctl<R>, Args(a): Args<Level>) -> Reply {
+    reply(c.music_level(a.effect, a.level).await)
+}
+
+async fn music_stop<R: Radio>(State(c): Ctl<R>, _: Args<NoArgs>) -> Reply {
+    reply(c.music_stop().await)
 }
 
 async fn unknown_command(uri: Uri) -> ApiError {
@@ -462,6 +566,58 @@ mod tests {
             call(&app, "POST", "/api/scene", Some(r#"{"first":"ff0000","second":"00ff00","speed":50,"brightness":100,"reverse":false}"#)).await,
             error(StatusCode::BAD_GATEWAY, "the light did not confirm the scene colors")
         );
+    }
+
+    #[test]
+    fn has_a_route_for_each_app_command() {
+        let app = include_str!("../../glowmote-app/src/lib.rs");
+        let handlers = app.split("generate_handler![").nth(1).unwrap();
+        let handlers = &handlers[..handlers.find(']').unwrap()];
+        let routes = include_str!("lib.rs");
+        // listen captures audio on the app's own machine; the page streams levels here instead
+        for name in handlers
+            .split(',')
+            .map(str::trim)
+            .filter(|n| !n.is_empty() && *n != "listen")
+        {
+            assert!(
+                routes.contains(&format!("\"/api/{name}\"")),
+                "no route for {name}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn routes_every_app_command() {
+        let app = app();
+        for (command, body) in [
+            ("diy_upload", r#"{"pixels":["ff0000"]}"#),
+            (
+                "diy_animate",
+                r#"{"pixels":["ff0000"],"mode":1,"speeds":[30]}"#,
+            ),
+            (
+                "effect",
+                r#"{"mode":8,"first":"ff0000","second":"0000ff","speed":50,"brightness":100,"reverse":false}"#,
+            ),
+            (
+                "scene_effect",
+                r#"{"effect":9,"colors":["ff0000","00ff00"],"speed":50,"brightness":100,"reverse":false}"#,
+            ),
+            (
+                "timers",
+                r#"{"now":{"weekday":6,"hour":20,"minute":0,"second":0},"on":{"hour":19,"minute":0,"days":127},"off":null}"#,
+            ),
+            ("music", r#"{"on":true,"effect":5,"sensitivity":80}"#),
+            ("music_level", r#"{"effect":5,"level":40}"#),
+            ("music_stop", "{}"),
+        ] {
+            assert_eq!(
+                call(&app, "POST", &format!("/api/{command}"), Some(body)).await,
+                (StatusCode::CONFLICT, json!({ "error": "not connected" })),
+                "{command}"
+            );
+        }
     }
 
     #[tokio::test]

@@ -334,12 +334,14 @@ function musicArgs() {
   return { effect: musicEffect, sensitivity: Number($("sensitivity").value) };
 }
 
-// Android has no native audio capture here, so the web view measures the microphone itself.
-const WEB_AUDIO = /Android/.test(navigator.userAgent);
+// Android and the proxy have no native audio capture, so the page measures the microphone itself.
+// Browsers allow that only over HTTPS or on localhost.
+const WEB_AUDIO = /Android/.test(navigator.userAgent) || Boolean(window.__TAURI__.proxy);
 const TICK_MS = 120;
 let webListen = null;
 
 async function startWebListen() {
+  if (!navigator.mediaDevices) throw new Error("this page needs HTTPS or localhost to use the microphone");
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   });

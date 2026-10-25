@@ -12,4 +12,7 @@ window.__TAURI__ = {
       return body.ok;
     },
   },
+  // No server-pushed events; listeners never fire.
+  event: { async listen() { return () => {}; } },
+  proxy: true,
 };
