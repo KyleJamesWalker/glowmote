@@ -227,9 +227,32 @@ previous mode on it.
 The light's own microphone: `06 'MIC' 01 64 00` turns it on and the app stops streaming;
 `04 'MIC' 00` turns it off. Neither is acked.
 
-From `BleProtocol.sendRhythm`, not yet captured: the level is the phone microphone level halved
-and clamped to 1–100, at most one block per 50 ms, and the app offers effects 0–9 on current
-lights (0–4 on older ones). The `MIC` byte `64` is the app's `duration` slider, default 100.
+From the `TR2309` firmware (parser case `0xb` at `0x1e057a8`, renderer in the tick ISR
+`0x1e081ec`), not yet captured unless stated:
+
+- A level block powers the light on, saves the current mode for `RSTOPR`, turns the light's
+  microphone off and enters music mode. A new effect index is saved to flash; a repeated one is
+  not.
+- `MIC` is `<on> <sensitivity> <effect>`. The captured `64` is sensitivity 100: the bar length is
+  `level × N / (2200 − 16 × sensitivity)`, so values over 137 make the divisor negative. The third
+  byte is the music effect. `MIC 00` stops the microphone but stays in music mode until `RSTOPR`.
+- With levels from the app, the bar length is `min(level × N / 100, N)` over `N` LEDs per segment. Effects 0–4
+  trigger when the bar reaches 10 LEDs and use each block once; 5–9 hold the last level.
+- The renderer ignores effect indexes above 9 and draws nothing; the handlers do not check them.
+  No `SGLS` or `MULT` colors are used.
+
+| Effect | Name | Behavior |
+|---|---|---|
+| 0 | Color comets | a comet with a 13-pixel tail runs from the start per beat, cycling a 7-color palette |
+| 1 | Center-out comets | mirrored rainbow comets run from the center to both ends per beat |
+| 2 | Edge-in pulses | soft 22-pixel rainbow pulses run from both ends to the center per beat |
+| 3 | Beat flash | the whole strip flashes a new rainbow color per beat, then fades |
+| 4 | Dot stream | single dots run from the end to the start per beat, cycling the palette |
+| 5 | Level meter | a one-color bar from the start, length by level, with a falling peak dot |
+| 6 | Center meter | the meter mirrored outward from the center |
+| 7 | Rainbow center meter | the center meter with a rainbow gradient, decaying after each level |
+| 8 | Cycling center meter | the center meter in one color that cycles the rainbow, decaying |
+| 9 | Edge-in meter | mirrored decaying bars growing from both ends toward the center |
 
 ## Acknowledgements
 
