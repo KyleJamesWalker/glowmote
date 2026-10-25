@@ -187,6 +187,26 @@ drawing, and `DSTOP 01` leaves the drawing showing.
 **Brightness has no command.** The app scales the RGB channels: red at 100% → `ff`, ~50% →
 `7f`–`89`, 0% → `02`. A lit channel never drops below `02`.
 
+### `DOOT` (bulk DIY)
+
+Captured on 2026-10-24 when the vendor app applied a saved DIY favorite: `04 'DOOT' 03`, three
+full frames on `0x0009` holding 42 static runs that cover 180 LEDs, then `06 'DOOTCP'` and
+`08 'DTARTCY' 01`. Each record is `count_hi count_lo R G B mode speed`, with mode as in `DOOD`;
+**the total count must not exceed the LED count**. Saving the favorite sent nothing; the app
+keeps favorites itself. From `DiyAgreement` and the `TR2309` handler:
+
+- Frames are `<data len + 1> <frame index> <records…>`, padded to 100 bytes: 14 records (98
+  bytes) per frame once the MTU is raised, 19 data bytes otherwise.
+- Each frame is acked with `09 'DOOTREOK' <frame index>`; the index replaces the usual trailing
+  zero, so the reply has no `OK` suffix at `len`.
+- On `DOOTCP` the firmware keeps the drawing only if the last frame index equals the header's
+  count minus 1. The app computes the count as `ceil(bytes / 99)`, which is one short when the
+  last frame holds few records (for example 99 records in 8 frames).
+- `DOOT` does not reset the firmware's pixel write offset; `DOOTCP`, `SPLACP` and `STARTCY 01` do.
+  An upload abandoned before `DOOTCP` makes the next one start mid-strip.
+- After `DOOTCPOK` the app sends `DTARTCY 01`; on timeout it sends `DTARTCY 00`, which restores
+  the previous mode.
+
 ## Acknowledgements
 
 Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. Only the first
@@ -230,7 +250,6 @@ the reference device byte for byte, so the rest likely carry over. Each reply be
 | `05 'LAMPQ'` | query type and capabilities | reply `07 'LAMPQ' type volt 00` then 480, 160, 100, 140 (u16 LE) |
 | `07 'DIRECT' rev` | strip direction | 0 mirrors pixel order inside each segment |
 | `07 'SPLAY' scenes frames` + frames on `…960a` | playlist of saved scenes | **scenes 1–8**, frame scene index 0–7; finish with `06 'SPLACP'` then `08 'STARTCY' 01` |
-| `04 'DOOT' frames` + frames on `…960a` | bulk DIY upload | 7-byte records `count_hi count_lo R G B mode speed`; **total count ≤ LED count**; finish with `06 'DOOTCP'` then `08 'DTARTCY' 01`. See [DOOT](#doot-bulk-diy-predicted) |
 | `04 'DEN' 01` | enter DIY without clearing the canvas | |
 | `04 'MOVE'` | identify blink | no reply |
 | `0a 'CHECKLINE' 01`, `CONFIRM`, `CSTOPR` | RGB channel-order wizard | result saved |
@@ -240,22 +259,6 @@ the reference device byte for byte, so the rest likely carry over. Each reply be
 
 Exact predicted plaintext and ciphertext for each command and reply is in
 `research/firmware/predictions/predict.txt` (git-ignored).
-
-### `DOOT` (bulk DIY, predicted)
-
-From `DiyAgreement` and the `TR2309` handler:
-
-- Frames are `<data len + 1> <frame index> <records…>`, padded to 100 bytes: 14 records (98
-  bytes) per frame once the MTU is raised, 19 data bytes otherwise.
-- Each frame is acked with `09 'DOOTREOK' <frame index>`; the index replaces the usual trailing
-  zero, so the reply has no `OK` suffix at `len`.
-- On `DOOTCP` the firmware keeps the drawing only if the last frame index equals the header's
-  count minus 1. The app computes the count as `ceil(bytes / 99)`, which is one short when the
-  last frame holds few records (for example 99 records in 8 frames).
-- `DOOT` does not reset the firmware's pixel write offset; `DOOTCP`, `SPLACP` and `STARTCY 01` do.
-  An upload abandoned before `DOOTCP` makes the next one start mid-strip.
-- After `DOOTCPOK` the app sends `DTARTCY 01`; on timeout it sends `DTARTCY 00`, which restores
-  the previous mode.
 
 ### Music rhythm (predicted)
 

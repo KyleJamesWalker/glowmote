@@ -343,9 +343,8 @@ pub fn parse_frame_ack(plain: &Packet) -> Option<(&str, u8)> {
     Some((tag, index))
 }
 
-// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
 #[cfg(test)]
-mod predicted_diy_upload {
+mod diy_upload_tests {
     use super::*;
     use hex_literal::hex;
 
@@ -359,23 +358,37 @@ mod predicted_diy_upload {
         diy_runs(&pixels, DiyMode::Static, 100)
     }
 
+    // Captured 2026-10-24: the vendor app applying a saved DIY favorite on 180 LEDs.
+    const FAVORITE: [[u8; DIY_FRAME_LEN]; 3] = [
+        hex!("63000005001d800264000180002802640005001d800264000280002802640002001d800264000480002802640002001d800264000180002802640001001d800264000169008002640003001d800264000180002802640005001d80026400018000280264"),
+        hex!("6301000169008002640001001d800264000280002802640001001d800264000280002802640003001d800264000169008002640002001d800264000169008002640005001d800264000180002802640001001d800264000269008002640002001d800264"),
+        hex!("6302000180002802640001001d80026400018000280264000b001d800264000180002802640005001d800264000169008002640003001d800264000180002802640001001d800264000480002802640009001d800264000169008002640051001d800264"),
+    ];
+
     #[test]
-    fn diy_upload_commands_match_prediction() {
+    fn diy_upload_matches_capture() {
+        let runs: Vec<_> = FAVORITE
+            .iter()
+            .flat_map(|f| f[2..].chunks(DIY_RECORD_LEN))
+            .map(|r| {
+                assert_eq!(r[5], DiyMode::Static as u8);
+                DiyRun {
+                    count: u16::from_be_bytes([r[0], r[1]]),
+                    color: Rgb::new(r[2], r[3], r[4]),
+                    mode: DiyMode::Static,
+                    speed: r[6],
+                }
+            })
+            .collect();
+        let upload = diy_upload(&runs, 180).unwrap();
         assert_eq!(
-            encrypt(&diy_upload(&runs(14), 180).unwrap().header),
-            hex!("d76dc77f84fdfb9bb32b2ea2b51dbbdd")
+            encrypt(&upload.header),
+            hex!("4d125879450737e4b6fa4e85062cfac1")
         );
-        assert_eq!(
-            encrypt(&diy_upload(&runs(15), 180).unwrap().header),
-            hex!("7c9ce439908ee0714226ea4e5f89469b")
-        );
+        assert_eq!(upload.frames, FAVORITE);
         assert_eq!(
             encrypt(&diy_upload_done()),
             hex!("49ca6210248aac8b1c1fc7fc55dd3f94")
-        );
-        assert_eq!(
-            encrypt(&diy_upload_finish(false)),
-            hex!("bbaea25c50e3b79766a00d8d7f5a4a56")
         );
         assert_eq!(
             encrypt(&diy_upload_finish(true)),
