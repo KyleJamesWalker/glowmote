@@ -41,7 +41,9 @@ On macOS the first run asks for Bluetooth permission for your terminal.
 
 ## Desktop app
 
-A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color, brightness, scenes, DIY painting and white balance. It holds
+A [Tauri 2](https://v2.tauri.app/) app with scan, connect, power, color and effects, moods (Candle,
+Flicker), multi-color scenes, DIY painting with saved designs, music mode, timers and white
+balance. Effects predicted from the firmware but not yet captured are marked in the UI. It holds
 one connection while open.
 
 ```sh
@@ -85,8 +87,17 @@ failed or did not acknowledge.
 | `POST /api/diy` | `{"on", "keep"}` (`keep` optional: leave the drawing showing) | `null` |
 | `POST /api/diy_pixel` | `{"index", "leds", "rgb", "brightness"}` | acknowledged tag |
 | `POST /api/diy_fill` | `{"leds", "rgb", "brightness"}` | acknowledged tag |
+| `POST /api/diy_upload` | `{"pixels"}`: one color per LED from LED 0 | `null` |
+| `POST /api/diy_animate` | `{"pixels", "mode", "speeds"}`: mode 0 flash, 1 breathe, 2 static; a speed (1-100) per LED | `null` |
+| `POST /api/effect` | `{"mode", "first", "second", "speed", "brightness", "reverse"}`: color effect 0-9 | acknowledged tag |
+| `POST /api/scene_effect` | `{"effect", "colors", "speed", "brightness", "reverse"}`: effect 0-11, 1-7 colors | `null` |
+| `POST /api/timers` | `{"now": {"weekday", "hour", "minute", "second"}, "on", "off"}`: each timer `{"hour", "minute", "days"}` or `null`; `days` bit 0 is Monday | acknowledged tag |
+| `POST /api/music` | `{"on", "effect", "sensitivity"}`: the light's own microphone | `null` |
+| `POST /api/music_level` | `{"effect", "level"}`: one level, 1-100; send about every 120 ms | `null` |
+| `POST /api/music_stop` | `{}` | `null` |
 
-Colors are `RRGGBB` hex, with or without `#`; brightness and speed are 0-100. Commands from all
+Colors are `RRGGBB` hex, with or without `#`; brightness and speed are 0-100. In a browser, music
+from the microphone works only on `localhost` or over HTTPS. Commands from all
 clients run one at a time in arrival order, so send DIY pixels sequentially to keep their order.
 
 
@@ -110,7 +121,8 @@ startup. An action runs in the background; triggering another stops it, and
 The app builds for Android 8.0 (API 26) and later, with Bluetooth through
 [blec](https://github.com/MnlPhlp/tauri-plugin-blec) instead of btleplug. It has the desktop
 app's commands. Light info shows firmware versions but no model string: the model is a GATT
-descriptor, and blec cannot read descriptors on Android. Not yet tried against a light.
+descriptor, and blec cannot read descriptors on Android. Music listens with the phone's
+microphone through the web view, after an Android permission prompt. The app is fixed to portrait.
 
 The first scan asks for the Nearby devices permission (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`). If
 it was denied before, scanning opens the app's settings page instead; allow Nearby devices there.
@@ -129,6 +141,7 @@ adb install -r gen/android/app/build/outputs/apk/universal/debug/app-universal-d
 | `crates/glowmote-ble` | BLE transport via [btleplug](https://github.com/deviceplug/btleplug), or blec on Android: scanning and a connection that stays open across commands. |
 | `crates/glowmote-control` | `Controller`: the shared light connection and the command set the app and proxy expose. |
 | `crates/glowmote-app` | Tauri 2 desktop app; the UI is plain HTML/JS in `ui/`, no npm. |
+| `crates/glowmote-audio` | Microphone loudness via [cpal](https://github.com/RustAudio/cpal), for music mode on desktop. |
 | `crates/glowmote-proxy` | `glowmote-proxy` binary: the commands over HTTP, plus the app's UI for browsers. |
 | `crates/glowmote-cli` | `glowmote` binary: one-shot commands, `shell` and `probe`. |
 | `docs/protocols/` | One file per protocol: GATT layout, encryption, confirmed commands. |
