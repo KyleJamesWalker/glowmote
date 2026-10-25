@@ -153,10 +153,10 @@ app's `modelIndex` 10, 11 and 12 map to effects 7, 8 and 9, 13–19 to 0–6, an
 | 0 | color bands scrolling |
 | 1 | static bands with random pixels blanked (twinkle) |
 | 2 | color wipe, each color over the last |
-| 3 | curtain wipe from the center out and back |
+| 3 | curtain wipe from the center out and back (read before the `jls` fix; recheck) |
 | 4 | one dot per color chasing on black |
 | 5 | half-strip bar enters and leaves, next color each pass |
-| 6 | stacking fill, next color each round |
+| 6 | stacking fill, next color each round (read before the `jge` fix; recheck) |
 | 7 | meteor tails per color, scrolling |
 | 8 | pulse waves per color, scrolling |
 | 9 | smooth gradient between consecutive colors, flowing |
@@ -373,7 +373,8 @@ parameter limits live in code; reading them needs a pi32v2 disassembler such as
 ## Firmware limits (`TR2309R002-02`)
 
 Read from the decrypted `app.bin` of the closest sibling image in Ghidra, with the q32s module
-extended until it matched JieLi's own `rom.lst` disassembly. The reference device's firmware is
+extended until it matched JieLi's own `rom.lst` disassembly, and rechecked against the listing
+after fixing the module's inverted `jls`/`jge` conditions. The reference device's firmware is
 newer and may differ, so treat these as the safe envelope, not as its exact behavior.
 Addresses are load addresses (`app.bin` offset + `0x01e00120`).
 
@@ -388,10 +389,12 @@ data is saved to flash and reloaded at boot, so a bad value can survive a power 
 | `DOOD` (one pixel) | bytes 6–7, index | below 400 | five 400-byte channel buffers from RAM `0x306a` (`0x01e06462`–`0x01e06484`) |
 
 The renderers are guarded: 10 `SGLS` effects (jump table at `0x01e06cf6`) and 12 `MULT` effects
-(`0x01e075cc`); out-of-range effects are skipped, and the final pixel output checks the LED count.
-`CT` and `LAMPN` only clamp an LED count of 0 to 11; there is no maximum on this image. The
-capability record behind `LAMPQ` advertises 480, 160, 100 and 140; 480 looks like the maximum
-LED count. Speed, brightness and saturation are stored as-is and bounded only by being bytes.
+(`0x01e075cc`); out-of-range effects are skipped. The pixel setter writes only below the
+configured LED count (`0x01e068bc`), not below the size of its 400-byte frame buffers. `CT` and
+`LAMPN` only clamp an LED count of 0 to 11; there is no maximum on this image, so **an LED count
+above 400 writes past the frame buffers** (`0x01e06946`) into DIY state. The capability record
+behind `LAMPQ` advertises 480, 160, 100 and 140, but 480 is not safe. Speed, brightness and
+saturation are stored as-is and bounded only by being bytes.
 
 Reading the uncaptured handlers found more unchecked fields, all of which also persist:
 
@@ -400,12 +403,13 @@ Reading the uncaptured handlers found more unchecked fields, all of which also p
 | `LAMPT` | byte 6, LED type | 0–4 | boot reads LED timing past its table: the lights look dead after every power cycle (fixable over BLE with a valid type) |
 | `SPLAY` | byte 6, scene count | 1–8 | the save writes RAM junk over flash keys up to the device name and MAC address |
 | `SPLAY` frame | byte 2, scene index | 0–7 | writes past the 8-record scene table |
-| `MULT` | byte 9, color count | 1–7 | above 7 overflows the color slots; 0 divides by zero |
+| `MULT` | byte 9, color count | 1–7 | above 7 the renderer reads the wrong colors; 0 divides by zero (`0x01e076bc`). More than 7 colors in the frame writes past the color slots |
 | `DOOT`, `SPLAY` type 04 | sum of record counts | ≤ LED count ≤ 400 | writes past the pixel buffers |
-| `DOOD` | byte 9, speed | 1–100 | zeroes one entry past several arrays; the app's own 100 already does (RAM only, low risk) |
+| `DOOD` | byte 9, speed | 1–100 | zeroes one entry past several 100-entry arrays; the app's own 100 already does, landing on scene 0's type byte (RAM only, low risk). Above 100, breathe mode also writes past an array (`0x01e08190`); 0 never draws |
 
-glowmote sends only `SGLS` mode 0, `MULT` effect 7 with two colors, and `DOOD` mode 2 at speed
-100, and refuses `DOOD` indexes and fill counts above 400 (`ideal::MAX_LEDS`).
+glowmote keeps `SGLS` modes to 0–9, `MULT` effects to 0–11 with 1–7 colors, DIY speeds to 1–100,
+and refuses `DOOD` indexes, fill counts and `DOOT` totals above 400 (`ideal::MAX_LEDS`). It does
+not send `LAMPT`, `LAMPN`, `CT` or `SPLAY`.
 
 ## Capturing more
 
