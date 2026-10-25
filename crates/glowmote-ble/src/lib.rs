@@ -95,6 +95,8 @@ impl Light {
     /// Sends a bulk DIY drawing frame by frame, then shows it. Returns `false` if the light
     /// stopped acknowledging; the upload is then closed and discarded.
     pub async fn send_diy_upload(&mut self, upload: &ideal::DiyUpload) -> Result<bool> {
+        // an upload cut off before DOOTCP leaves the firmware's write offset mid-strip
+        self.send_unacked(&ideal::diy_upload_done()).await?;
         if self.send(&upload.header).await?.is_none() {
             return Ok(false);
         }

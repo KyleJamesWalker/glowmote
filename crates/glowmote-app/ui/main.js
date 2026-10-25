@@ -600,6 +600,17 @@ function fillAll(color, brightness = diyBrightness()) {
   queueDiy("diy_fill", { leds: ledCount(), rgb: balance(color), brightness });
 }
 
+// Redraws the whole strip in one bulk upload; LEDs missing from `next` go dark.
+function drawAll(next) {
+  design = next;
+  buildStrip();
+  const pixels = Array.from({ length: ledCount() }, (_, i) => {
+    const pixel = design.get(i);
+    return pixel ? balance(pixel.color) : "#000000";
+  });
+  queueDiy("diy_upload", { pixels });
+}
+
 function paint(cell) {
   const index = Number(cell.dataset.index);
   const color = $("color").value;
@@ -618,10 +629,15 @@ function mix(a, b, t) {
 function applyGradient() {
   const from = $("color").value;
   const to = $("gradient-to").value;
+  const next = new Map(design);
   for (const [label, indexes] of arms()) {
     if (hiddenArms.includes(label)) continue;
-    indexes.forEach((index, i) => setPixel(index, mix(from, to, indexes.length > 1 ? i / (indexes.length - 1) : 0)));
+    indexes.forEach((index, i) => next.set(index, {
+      color: mix(from, to, indexes.length > 1 ? i / (indexes.length - 1) : 0),
+      brightness: diyBrightness(),
+    }));
   }
+  drawAll(next);
 }
 
 // Paint slots: click to paint with a slot, click the selected slot again to change its color.
@@ -742,19 +758,8 @@ function storeDesigns(designs) {
   } catch {}
 }
 
-// Replays a design as one fill with its most common color, then pixels for the rest.
 function applyDesign(pixels) {
-  const counts = new Map();
-  for (const [, p] of pixels) {
-    const key = `${p.color}/${p.brightness}`;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  const [base] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? [];
-  if (base) {
-    const [color, brightness] = base.split("/");
-    fillAll(color, Number(brightness));
-  }
-  for (const [index, p] of pixels) setPixel(index, p.color, p.brightness);
+  drawAll(new Map(pixels.filter(([index]) => index < ledCount())));
 }
 
 function showDesigns() {

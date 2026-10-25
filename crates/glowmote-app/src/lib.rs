@@ -87,6 +87,11 @@ async fn diy_fill(c: Ctl<'_>, leds: u16, rgb: String, brightness: u8) -> CmdResu
     Ok(c.diy_fill(leds, &rgb, brightness).await?)
 }
 
+#[tauri::command]
+async fn diy_upload(c: Ctl<'_>, pixels: Vec<String>) -> CmdResult<()> {
+    Ok(c.diy_upload(&pixels).await?)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -106,7 +111,8 @@ pub fn run() {
             timers,
             diy,
             diy_pixel,
-            diy_fill
+            diy_fill,
+            diy_upload
         ])
         .run(tauri::generate_context!())
         .expect("error while running glowmote");

@@ -68,6 +68,10 @@ pub trait Link: Send + 'static {
         header: &ideal::Packet,
         frame: &[u8],
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
+    fn send_diy_upload(
+        &mut self,
+        upload: &ideal::DiyUpload,
+    ) -> impl Future<Output = anyhow::Result<bool>> + Send;
     fn disconnect(self) -> impl Future<Output = anyhow::Result<()>> + Send;
     fn info(&mut self) -> impl Future<Output = anyhow::Result<LightInfo>> + Send;
 }
@@ -134,6 +138,10 @@ impl Link for Light {
 
     async fn send_scene(&mut self, header: &ideal::Packet, frame: &[u8]) -> anyhow::Result<bool> {
         Light::send_scene(self, header, frame).await
+    }
+
+    async fn send_diy_upload(&mut self, upload: &ideal::DiyUpload) -> anyhow::Result<bool> {
+        Light::send_diy_upload(self, upload).await
     }
 
     async fn disconnect(self) -> anyhow::Result<()> {
@@ -358,6 +366,26 @@ impl<R: Radio> Controller<R> {
         self.send(packet).await
     }
 
+    /// Draws a whole strip in one bulk upload, one color per LED from LED 0.
+    pub async fn diy_upload(&self, pixels: &[String]) -> Result<()> {
+        let leds = u16::try_from(pixels.len())
+            .map_err(|_| Error::Invalid(format!("{} LEDs is too many", pixels.len())))?;
+        let colors = pixels
+            .iter()
+            .map(|c| parse(c))
+            .collect::<Result<Vec<_>>>()?;
+        let runs = ideal::diy_runs(&colors, ideal::DiyMode::Static, 100);
+        let upload = ideal::diy_upload(&runs, leds).map_err(|e| Error::Invalid(e.to_string()))?;
+        let mut slot = self.light.lock().await;
+        let light = slot.as_mut().ok_or(Error::NotConnected)?;
+        match light.send_diy_upload(&upload).await? {
+            true => Ok(()),
+            false => Err(Error::Device(
+                "the light did not confirm the drawing".into(),
+            )),
+        }
+    }
+
     async fn send(&self, packet: ideal::Packet) -> Result<String> {
         let mut slot = self.light.lock().await;
         let light = slot.as_mut().ok_or(Error::NotConnected)?;
@@ -427,6 +455,11 @@ mod tests {
 
         async fn send_scene(&mut self, header: &ideal::Packet, _: &[u8]) -> anyhow::Result<bool> {
             self.log.lock().unwrap().push(*header);
+            Ok(true)
+        }
+
+        async fn send_diy_upload(&mut self, upload: &ideal::DiyUpload) -> anyhow::Result<bool> {
+            self.log.lock().unwrap().push(upload.header);
             Ok(true)
         }
 
@@ -562,6 +595,29 @@ mod tests {
             Err(Error::Invalid(_))
         ));
         assert_eq!(log.lock().unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn diy_upload_sends_runs_for_the_whole_strip() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        let mut pixels = vec!["ff0000".to_string(); 179];
+        pixels.push("0000ff".into());
+        c.diy_upload(&pixels).await.unwrap();
+        let red = Rgb::new(0xff, 0, 0);
+        let mut colors = vec![red; 179];
+        colors.push(Rgb::new(0, 0, 0xff));
+        let runs = ideal::diy_runs(&colors, ideal::DiyMode::Static, 100);
+        assert_eq!(
+            *log.lock().unwrap(),
+            [ideal::diy_upload(&runs, 180).unwrap().header]
+        );
+        let too_many = vec!["ff0000".to_string(); 401];
+        assert!(matches!(
+            c.diy_upload(&too_many).await,
+            Err(Error::Invalid(_))
+        ));
+        assert!(matches!(c.diy_upload(&[]).await, Err(Error::Invalid(_))));
     }
 
     #[tokio::test]

@@ -298,6 +298,13 @@ mod tests {
             Ok(false)
         }
 
+        async fn send_diy_upload(
+            &mut self,
+            _: &glowmote_core::ideal::DiyUpload,
+        ) -> anyhow::Result<bool> {
+            Ok(false)
+        }
+
         async fn disconnect(self) -> anyhow::Result<()> {
             Ok(())
         }
