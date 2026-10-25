@@ -157,7 +157,7 @@ $("off").addEventListener("click", () => { showPower(false); run("power", { on: 
 
 // White balance
 
-const WB_DEFAULT = { r: 100, g: 63, b: 44, temp: 0, tint: 0 };
+const WB_DEFAULT = { r: 100, g: 55, b: 40, temp: 0, tint: 0 };
 const WB_KEYS = ["r", "g", "b", "temp", "tint"];
 let wb = { ...WB_DEFAULT };
 
