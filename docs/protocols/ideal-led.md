@@ -80,8 +80,8 @@ Built by `BleProtocol.sendSingleColor` (`com/winkison/smartlights/ble/BleProtoco
 |---|---|---|
 | 0 | length | `0f` |
 | 1–4 | tag | `SGLS` |
-| 5 | mode (effect index) | `00` = solid |
-| 6 | direction (inverted "reverse" flag) | `00` |
+| 5 | mode (effect index) | `00` = solid, `01` |
+| 6 | direction (inverted "reverse" flag) | `00`, `01` |
 | 7 | brightness, 0–100 (the app always sends 100) | `64` |
 | 8 | speed | `50` |
 | 9–11 | color 1 RGB | |
@@ -99,7 +99,8 @@ From the app code, not yet captured:
 - Saturation: slider; the app's reset value is 100.
 - The color screen sends at most one `SGLS` per 50 ms (`ColorFragment.sendSingleColor`).
 
-Effects by mode, read from the `TR2309` renderer (not yet captured). Color 1 is the foreground,
+Effects by mode, read from the `TR2309` renderer. Modes 0 and 1 were captured from scene pages
+on 2026-10-24; the rest are not yet captured. Color 1 is the foreground,
 color 2 the background; frame period is `(100 − speed) + 20` ticks:
 
 | Mode | Effect |

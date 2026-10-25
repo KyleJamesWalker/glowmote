@@ -141,26 +141,25 @@ fn sgls(mode: u8, reversed: bool, speed: u8, [c1, c2]: [Rgb; 2]) -> Packet {
     )
 }
 
-// Predicted from the TR2309R002-02 firmware and the vendor app; replace with captured ciphertext.
 #[cfg(test)]
-mod predicted_effect {
+mod effect_tests {
     use super::*;
     use hex_literal::hex;
 
     const RED: Rgb = Rgb::new(0xff, 0, 0);
     const GREEN: Rgb = Rgb::new(0, 0xff, 0);
     const BLUE: Rgb = Rgb::new(0, 0, 0xff);
-    const WHITE: Rgb = Rgb::new(0xff, 0xff, 0xff);
 
+    // Captured 2026-10-24 from the vendor app's scene pages.
     #[test]
-    fn effects_match_prediction() {
+    fn effects_match_capture() {
         assert_eq!(
-            encrypt(&effect(3, false, 50, [RED, BLUE], 100).unwrap()),
-            hex!("ad53ba276e719a2bd006adc7e52539d8")
+            encrypt(&effect(1, false, 0x50, [GREEN, BLUE], 50).unwrap()),
+            hex!("abc14c153ede82e54b7e050132c329d8")
         );
         assert_eq!(
-            encrypt(&effect(9, true, 100, [GREEN, WHITE], 100).unwrap()),
-            hex!("417f07c784b826379da1b63808a7a11a")
+            encrypt(&effect(0, true, 0x50, [RED, RED], 37).unwrap()),
+            hex!("d31cf01de4024b9952ec894d32ae4694")
         );
     }
 
