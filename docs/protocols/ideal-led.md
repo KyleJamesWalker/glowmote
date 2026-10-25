@@ -27,7 +27,7 @@ Covers BLE controllers that advertise as `ISP-*` or `IDL-*` and pair with the An
 | Model string (user description `2901` on `…9600`), e.g. `TR2411R003-07` | | `0x0007` |
 | Notify (acks) | `d44bc439-abfd-45a2-b575-925416129601` | `0x000d`, CCCD `0x000e` |
 | Bulk write (plaintext frames, see `MULT`) | `d44bc439-abfd-45a2-b575-92541612960a` | `0x0009` |
-| Extra write channel | `…960b` | |
+| Music levels (encrypted, see [Music mode](#music-mode)) | `d44bc439-abfd-45a2-b575-92541612960b` | `0x000b` |
 | Unknown service / write / write+notify | `0000fd00` / `0000fd01` / `0000fd02` | |
 | OTA service / write / notify | `0000ae00` / `0000ae01` / `0000ae02` | `0x0082` / `0x0084`, CCCD `0x0085` |
 
@@ -216,6 +216,21 @@ Captured on 2026-10-24: on at 19:00 and off at 23:00, every day, sent
 if the hour has passed; timers fire against the `TIME` clock. The app's builder is
 `getTimerLightSwitch`.
 
+### Music mode
+
+Captured on 2026-10-24. The vendor app streams `02 <effect> <level>` + zeros, encrypted, to
+`…960b` (handle `0x000b`) about every 120 ms while the phone's microphone drives the lights;
+effects `00`–`02` and levels `01`–`64` were captured. No reply. `06 'RSTOPR'` (no reply) was sent
+on opening and leaving the music page and once in between; the `TR2309` firmware restores the
+previous mode on it.
+
+The light's own microphone: `06 'MIC' 01 64 00` turns it on and the app stops streaming;
+`04 'MIC' 00` turns it off. Neither is acked.
+
+From `BleProtocol.sendRhythm`, not yet captured: the level is the phone microphone level halved
+and clamped to 1–100, at most one block per 50 ms, and the app offers effects 0–9 on current
+lights (0–4 on older ones). The `MIC` byte `64` is the app's `duration` slider, default 100.
+
 ## Acknowledgements
 
 Each command gets a notification on `0x000d`, decrypted as `<len> <TAG>OK …`. Only the first
@@ -262,19 +277,10 @@ the reference device byte for byte, so the rest likely carry over. Each reply be
 | `04 'MOVE'` | identify blink | no reply |
 | `0a 'CHECKLINE' 01`, `CONFIRM`, `CSTOPR` | RGB channel-order wizard | result saved |
 | `06 'LIGHT' n` | brightness | no reply |
-| `06 'MIC' on duration effect`, `04 'MIC' 00`, `06 'RSTOPR'` | music mode | rhythm data on `…960b`; see [Rhythm](#music-rhythm-predicted) |
 | `TEST` | factory test | **never send**: sets 400 LEDs and cycles colors |
 
 Exact predicted plaintext and ciphertext for each command and reply is in
 `research/firmware/predictions/predict.txt` (git-ignored).
-
-### Music rhythm (predicted)
-
-`BleProtocol.sendRhythm` streams `02 <effect> <level>` + zeros, encrypted, to `…960b` at most
-once per 50 ms. The level is the microphone level halved and clamped to 1–100. The app offers
-effects 0–9 on current lights (0–4 on older ones). The `TR2309` firmware switches to music mode
-on the first block; `RSTOPR` restores the previous mode. `MIC` selects the light's own
-microphone instead (the app sends `on` = 1 and a `duration` slider value, default 100).
 
 ## OTA service (`ae00`)
 

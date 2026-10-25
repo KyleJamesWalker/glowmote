@@ -747,26 +747,47 @@ pub fn rhythm_stop() -> Packet {
     tagged(b"RSTOPR", &[])
 }
 
-// No firmware prediction exists for the rhythm block: its ciphertexts encrypt the bytes
-// BleProtocol.sendRhythm builds. RSTOPR is predicted from the TR2309R002-02 firmware.
+/// Switches music mode to the light's own microphone (`MIC 01 64 00`), or back off (`MIC 00`),
+/// as the app's microphone toggle does. Not acknowledged.
+pub fn light_microphone(on: bool) -> Packet {
+    if on {
+        tagged(b"MIC", &[1, 100, 0])
+    } else {
+        tagged(b"MIC", &[0])
+    }
+}
+
 #[cfg(test)]
-mod predicted_rhythm {
+mod rhythm_tests {
     use super::*;
     use hex_literal::hex;
 
+    // Captured 2026-10-24 from the vendor app's music page, with the phone's microphone.
     #[test]
-    fn rhythm_matches_app_builder() {
+    fn rhythm_matches_capture() {
+        for (effect, level, cipher) in [
+            (0, 1, hex!("3e1142824947852021989cf5b3c35921")),
+            (1, 0x17, hex!("771f81a56837572cfc6afa7384f427c9")),
+            (2, 0x27, hex!("c2850100635a9070cbe9a44387aebb92")),
+            (2, 0x4e, hex!("ec15bbf6137336f04254a3045768a369")),
+        ] {
+            assert_eq!(encrypt(&rhythm(effect, level).unwrap()), cipher);
+        }
         assert_eq!(
-            encrypt(&rhythm(0, 1).unwrap()),
-            hex!("3e1142824947852021989cf5b3c35921")
+            encrypt(&rhythm_stop()),
+            hex!("b418a9994f9adab07d78a24008161c3f")
+        );
+    }
+
+    #[test]
+    fn light_microphone_matches_capture() {
+        assert_eq!(
+            encrypt(&light_microphone(true)),
+            hex!("726e1c8c4da1f77727ee35abcb448fa7")
         );
         assert_eq!(
-            encrypt(&rhythm(9, 100).unwrap()),
-            hex!("9d143a16e5c9e36cfa0ac48ff6cc4e53")
-        );
-        assert_eq!(
-            encrypt(&rhythm(5, 50).unwrap()),
-            hex!("9a98003c58c44ca9ac9114937970eb19")
+            encrypt(&light_microphone(false)),
+            hex!("a6207a5cb9b6336ca99cf1cb5c304752")
         );
     }
 
@@ -775,14 +796,6 @@ mod predicted_rhythm {
         assert!(rhythm(RHYTHM_EFFECT_COUNT, 50).is_err());
         assert!(rhythm(0, 0).is_err());
         assert!(rhythm(0, 101).is_err());
-    }
-
-    #[test]
-    fn rhythm_stop_matches_prediction() {
-        assert_eq!(
-            encrypt(&rhythm_stop()),
-            hex!("b418a9994f9adab07d78a24008161c3f")
-        );
     }
 }
 
