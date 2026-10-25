@@ -60,6 +60,25 @@
           <h3>Moods</h3>
           <div class="presets" id="moods"></div>
         </div>
+        <div id="flicker-controls" class="stack" hidden>
+          <p class="hint">Flicker gives each LED one of these colors and its own breathing speed.</p>
+          <div class="scene-colors">
+            <div id="flicker-colors" class="wells"></div>
+            <div class="row">
+              <button id="flicker-remove" class="ghost" type="button" aria-label="Remove last color">−</button>
+              <button id="flicker-add" class="ghost" type="button" aria-label="Add a color">+</button>
+            </div>
+          </div>
+          <div class="presets" id="flicker-presets"></div>
+          <div class="slider">
+            <label for="flicker-speed">Speed <output id="flicker-speed-value">30%</output></label>
+            <input id="flicker-speed" type="range" min="5" max="90" value="30">
+          </div>
+          <div class="row">
+            <span></span>
+            <button id="flicker-play" class="primary" type="button">Flicker</button>
+          </div>
+        </div>
         <div id="effect-controls" class="stack" hidden>
           <div class="row">
             <label class="inline">Background <input id="effect-second" class="mini-color" type="color" value="#000000"></label>

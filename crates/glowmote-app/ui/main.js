@@ -969,14 +969,20 @@ loadSlots();
 showSlots();
 resume();
 
-// Moods: Candle breathes the whole strip between two warm tones; Flicker gives each LED its own
-// warm tone and breathing speed, so neighbors drift out of step like flames.
+// Moods: Candle breathes the whole strip between two warm tones; Flicker gives each LED a color
+// from a list and its own breathing speed, so neighbors drift out of step like flames.
 
 const BREATHE = 8;
-const WARM = ["#ff7a12", "#ff8f1f", "#ff6a00", "#ffa040", "#ff5a00"];
+const FLICKER_PRESETS = [
+  ["Candle", ["#ff7a12", "#ff8f1f", "#ff6a00", "#ffa040", "#ff5a00"]],
+  ["Halloween", ["#ff5a00", "#ff7a00", "#8a00ff", "#5a00c8", "#39ff14"]],
+  ["Witch", ["#39ff14", "#7a00ff", "#00ff80"]],
+  ["Blood moon", ["#ff0000", "#b00000", "#ff3000"]],
+];
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 function candle() {
+  $("flicker-controls").hidden = true;
   $("color-effects").children[BREATHE].click();
   $("effect-second").value = "#5a1800";
   $("effect-speed").value = 30;
@@ -984,21 +990,74 @@ function candle() {
   pickColor("#ff8a1a", true);
 }
 
+function flickerColors() {
+  return [...$("flicker-colors").querySelectorAll("input")].map((input) => input.value);
+}
+
+function setFlickerColors(colors) {
+  $("flicker-colors").replaceChildren(...colors.map((hex, i) => {
+    const well = document.createElement("label");
+    well.className = "well";
+    const input = document.createElement("input");
+    input.type = "color";
+    input.value = hex;
+    input.setAttribute("aria-label", `Flicker color ${i + 1}`);
+    input.addEventListener("change", saveFlicker);
+    well.append(input);
+    return well;
+  }));
+  $("flicker-add").disabled = colors.length >= 7;
+  $("flicker-remove").disabled = colors.length <= 1;
+  saveFlicker();
+}
+
+function saveFlicker() {
+  try { localStorage.setItem("flickerColors", JSON.stringify(flickerColors())); } catch {}
+}
+
+// Speeds spread from half to one and a half times the slider value.
 function flicker() {
   showPower(true);
-  const pixels = Array.from({ length: ledCount() }, () => balance(pick(WARM)));
-  const speeds = pixels.map(() => 15 + Math.floor(Math.random() * 35));
+  const colors = flickerColors();
+  const base = Number($("flicker-speed").value);
+  const pixels = Array.from({ length: ledCount() }, () => balance(pick(colors)));
+  const speeds = pixels.map(() => Math.min(100, Math.max(1, Math.round(base * (0.5 + Math.random())))));
   run("diy_animate", { pixels, mode: 1, speeds });
 }
 
-$("moods").replaceChildren(...[["Candle", candle, ["#ff8a1a", "#5a1800"]], ["Flicker", flicker, WARM]]
-  .map(([name, action, colors]) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    const duo = document.createElement("span");
-    duo.className = "duo";
-    duo.style.setProperty("--stops", stops(colors));
-    button.append(duo, name);
-    button.addEventListener("click", action);
-    return button;
-  }));
+function swatchButton(name, colors, action) {
+  const button = document.createElement("button");
+  button.type = "button";
+  const duo = document.createElement("span");
+  duo.className = "duo";
+  duo.style.setProperty("--stops", stops(colors));
+  button.append(duo, name);
+  button.addEventListener("click", action);
+  return button;
+}
+
+$("moods").replaceChildren(
+  swatchButton("Candle", ["#ff8a1a", "#5a1800"], candle),
+  swatchButton("Flicker", FLICKER_PRESETS[0][1], () => {
+    $("flicker-controls").hidden = false;
+    flicker();
+  }),
+);
+$("flicker-presets").replaceChildren(...FLICKER_PRESETS.map(([name, colors]) =>
+  swatchButton(name, colors, () => { setFlickerColors(colors); flicker(); })));
+$("flicker-add").addEventListener("click", () => {
+  const colors = flickerColors();
+  setFlickerColors([...colors, colors.at(-1)]);
+});
+$("flicker-remove").addEventListener("click", () => setFlickerColors(flickerColors().slice(0, -1)));
+$("flicker-speed").addEventListener("input", () => {
+  $("flicker-speed-value").textContent = `${$("flicker-speed").value}%`;
+});
+$("flicker-speed").addEventListener("change", flicker);
+$("flicker-play").addEventListener("click", flicker);
+try {
+  const saved = JSON.parse(localStorage.getItem("flickerColors") ?? "null");
+  setFlickerColors(Array.isArray(saved) && saved.length ? saved : FLICKER_PRESETS[0][1]);
+} catch {
+  setFlickerColors(FLICKER_PRESETS[0][1]);
+}
