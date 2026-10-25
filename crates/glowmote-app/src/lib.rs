@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use glowmote_control::{Controller, LightInfo};
+use glowmote_control::{Controller, LightInfo, LocalTime, TimerSetting};
 use tauri::State;
 
 const SCAN_TIME: Duration = Duration::from_secs(4);
@@ -57,6 +57,16 @@ async fn scene_effect(
 }
 
 #[tauri::command]
+async fn timers(
+    c: Ctl<'_>,
+    now: LocalTime,
+    on: Option<TimerSetting>,
+    off: Option<TimerSetting>,
+) -> CmdResult<String> {
+    Ok(c.timers(now, on, off).await?)
+}
+
+#[tauri::command]
 async fn diy(c: Ctl<'_>, on: bool, keep: Option<bool>) -> CmdResult<()> {
     Ok(c.diy(on, keep.unwrap_or(false)).await?)
 }
@@ -93,6 +103,7 @@ pub fn run() {
             power,
             color,
             scene_effect,
+            timers,
             diy,
             diy_pixel,
             diy_fill

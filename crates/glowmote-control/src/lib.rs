@@ -72,6 +72,26 @@ pub trait Link: Send + 'static {
     fn info(&mut self) -> impl Future<Output = anyhow::Result<LightInfo>> + Send;
 }
 
+/// A daily timer: `days` has bit 0 for Monday through bit 6 for Sunday, 0 for once.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+pub struct TimerSetting {
+    pub hour: u8,
+    pub minute: u8,
+    pub days: u8,
+}
+
+/// The local time to set on the light; `weekday` is 1 (Monday) to 7 (Sunday).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+pub struct LocalTime {
+    pub weekday: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+}
+
+/// The vendor app version the capture's `TIME` carried.
+const APP_VERSION: [u8; 3] = [3, 1, 7];
+
 /// What a light reports about itself: the model string and the two `VE` firmware versions.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct LightInfo {
@@ -279,6 +299,30 @@ impl<R: Radio> Controller<R> {
         }
     }
 
+    /// Sets the light's clock, then both power timers; `None` disables one.
+    pub async fn timers(
+        &self,
+        now: LocalTime,
+        on: Option<TimerSetting>,
+        off: Option<TimerSetting>,
+    ) -> Result<String> {
+        let invalid = |e: ideal::OutOfRange| Error::Invalid(e.to_string());
+        let clock = ideal::clock(now.weekday, now.hour, now.minute, now.second, APP_VERSION)
+            .map_err(invalid)?;
+        let timer = |t: TimerSetting| ideal::Timer {
+            hour: t.hour,
+            minute: t.minute,
+            days: t.days,
+        };
+        let schedule = ideal::timers(on.map(timer), off.map(timer)).map_err(invalid)?;
+        {
+            let mut slot = self.light.lock().await;
+            let light = slot.as_mut().ok_or(Error::NotConnected)?;
+            light.send_unacked(&clock).await?;
+        }
+        self.send(schedule).await
+    }
+
     /// Enters or leaves DIY mode; `keep_drawing` only matters when leaving.
     pub async fn diy(&self, on: bool, keep_drawing: bool) -> Result<()> {
         let packet = if on {
@@ -481,6 +525,43 @@ mod tests {
             Err(Error::Invalid(_))
         ));
         assert_eq!(log.lock().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn timers_set_the_clock_first() {
+        let (c, log) = controller(vec!["ISP-1"]);
+        c.connect_matching(None).await.unwrap();
+        let now = LocalTime {
+            weekday: 6,
+            hour: 19,
+            minute: 40,
+            second: 5,
+        };
+        let on = TimerSetting {
+            hour: 19,
+            minute: 0,
+            days: 0x7f,
+        };
+        c.timers(now, Some(on), None).await.unwrap();
+        let schedule = ideal::timers(
+            Some(ideal::Timer {
+                hour: 19,
+                minute: 0,
+                days: 0x7f,
+            }),
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            *log.lock().unwrap(),
+            [ideal::clock(6, 19, 40, 5, APP_VERSION).unwrap(), schedule]
+        );
+        let bad = TimerSetting { hour: 24, ..on };
+        assert!(matches!(
+            c.timers(now, Some(bad), None).await,
+            Err(Error::Invalid(_))
+        ));
+        assert_eq!(log.lock().unwrap().len(), 2);
     }
 
     #[tokio::test]

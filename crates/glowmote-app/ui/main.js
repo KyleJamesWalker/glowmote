@@ -403,6 +403,80 @@ $("scene-remove").addEventListener("click", () => {
 setSceneColors(SCENE_PRESETS[1][1]);
 $("scene-play").addEventListener("click", playScene);
 
+// Timers: the light cannot report its timers, so the last saved ones are remembered here.
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function timerField(id) {
+  const box = $(id);
+  return {
+    enabled: box.querySelector(".timer-enabled"),
+    time: box.querySelector(".timer-time"),
+    days: box.querySelector(".timer-days"),
+  };
+}
+
+function buildDays(field) {
+  field.days.replaceChildren(...WEEKDAYS.map((name) => {
+    const day = document.createElement("button");
+    day.type = "button";
+    day.textContent = name;
+    day.setAttribute("aria-pressed", "false");
+    day.addEventListener("click", () => {
+      day.setAttribute("aria-pressed", String(day.getAttribute("aria-pressed") !== "true"));
+    });
+    return day;
+  }));
+}
+
+function readTimer(field) {
+  if (!field.enabled.checked) return null;
+  const [hour, minute] = field.time.value.split(":").map(Number);
+  const days = [...field.days.children]
+    .reduce((mask, day, bit) => mask | (day.getAttribute("aria-pressed") === "true" ? 1 << bit : 0), 0);
+  return { hour, minute, days };
+}
+
+function showTimer(field, timer) {
+  field.enabled.checked = timer !== null;
+  if (!timer) return;
+  field.time.value = `${String(timer.hour).padStart(2, "0")}:${String(timer.minute).padStart(2, "0")}`;
+  [...field.days.children].forEach((day, bit) =>
+    day.setAttribute("aria-pressed", String(Boolean(timer.days & (1 << bit)))));
+}
+
+const timerOn = timerField("timer-on");
+const timerOff = timerField("timer-off");
+buildDays(timerOn);
+buildDays(timerOff);
+try {
+  const saved = JSON.parse(localStorage.getItem("timers") ?? "null");
+  if (saved) {
+    showTimer(timerOn, saved.on);
+    showTimer(timerOff, saved.off);
+  }
+} catch {}
+
+$("timers-save").addEventListener("click", async () => {
+  const d = new Date();
+  const now = {
+    weekday: d.getDay() || 7,
+    hour: d.getHours(),
+    minute: d.getMinutes(),
+    second: d.getSeconds(),
+  };
+  const on = readTimer(timerOn);
+  const off = readTimer(timerOff);
+  if ((on && Number.isNaN(on.hour)) || (off && Number.isNaN(off.hour))) {
+    setStatus("Pick a time for each enabled timer", true);
+    return;
+  }
+  if ((await run("timers", { now, on, off })) !== undefined) {
+    try { localStorage.setItem("timers", JSON.stringify({ on, off })); } catch {}
+    setStatus("Timers saved to the light");
+  }
+});
+
 // DIY
 
 // Every pixel write must reach the light, so DIY commands run strictly in order.

@@ -145,8 +145,29 @@
       </section>
 
       <section id="panel-timers" class="card panel" role="tabpanel" aria-labelledby="tab-timers" hidden>
-        <p class="soon">Not captured yet</p>
-        <p class="hint">On and off schedules stored on the light. Needs a capture from the vendor app first.</p>
+        <div>
+          <h3>Timers</h3>
+          <p class="hint">Stored on the light, which runs them without the app. Saving also sets the light's clock.</p>
+        </div>
+        <fieldset class="timer" id="timer-on">
+          <div class="row">
+            <label class="inline toggle-row">Turn on <span class="switch"><input class="timer-enabled" type="checkbox"><span></span></span></label>
+            <input class="timer-time" type="time" value="19:00" aria-label="Turn on at">
+          </div>
+          <div class="chips timer-days" aria-label="Turn on days"></div>
+        </fieldset>
+        <fieldset class="timer" id="timer-off">
+          <div class="row">
+            <label class="inline toggle-row">Turn off <span class="switch"><input class="timer-enabled" type="checkbox"><span></span></span></label>
+            <input class="timer-time" type="time" value="23:00" aria-label="Turn off at">
+          </div>
+          <div class="chips timer-days" aria-label="Turn off days"></div>
+        </fieldset>
+        <p class="hint">No days selected runs once, at the next occurrence.</p>
+        <div class="row">
+          <span></span>
+          <button id="timers-save" class="primary" type="button">Save to light</button>
+        </div>
       </section>
 
       <section id="panel-setup" class="card panel" role="tabpanel" aria-labelledby="tab-setup" hidden>
