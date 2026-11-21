@@ -12,3 +12,7 @@
   `tools/parse_snoop.py` under `docs/captures/`.
 - Reference device for iDeal: `ISP-50542B` on a Pixel 9 Pro XL over adb. Decompile vendor APKs
   with `jadx` into a scratch directory, never into the repo.
+- Make worktrees under `.claude/worktrees/` and run `tools/share-target.sh` once in the main checkout:
+  they then compile into the main checkout's `target/`, so the dependencies build once. Binaries
+  there are whichever worktree built last; find them with `cargo metadata`, never a literal
+  `target/`. Remove a worktree once its PR merges.
